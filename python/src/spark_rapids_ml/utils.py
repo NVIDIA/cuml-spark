@@ -156,10 +156,44 @@ def _get_gpu_id(task_context: TaskContext) -> int:
     return gpu_id
 
 
-def _configure_memory_resource(uvm_enabled: bool = False) -> None:
+def _configure_memory_resource(
+    uvm_enabled: bool = False,
+    sam_enabled: bool = False,
+    sam_headroom: Optional[int] = None,
+    force_sam_headroom: bool = False,
+) -> None:
     import cupy as cp
     import rmm
+    from cuda.bindings import runtime
     from rmm.allocators.cupy import rmm_cupy_allocator
+
+    _SYSTEM_MEMORY_SUPPORTED = rmm._cuda.gpu.getDeviceAttribute(
+        runtime.cudaDeviceAttr.cudaDevAttrPageableMemoryAccess,
+        rmm._cuda.gpu.getDevice(),
+    )
+
+    if not _SYSTEM_MEMORY_SUPPORTED and sam_enabled:
+        raise ValueError(
+            "System allocated memory is not supported on this GPU. Please disable system allocated memory."
+        )
+
+    if uvm_enabled and sam_enabled:
+        raise ValueError(
+            "Both CUDA managed memory and system allocated memory cannot be enabled at the same time."
+        )
+
+    if sam_enabled and sam_headroom is None:
+        if not type(rmm.mr.get_current_device_resource()) == type(
+            rmm.mr.SystemMemoryResource()
+        ):
+            mr = rmm.mr.SystemMemoryResource()
+            rmm.mr.set_current_device_resource(mr)
+    elif sam_enabled and sam_headroom is not None:
+        if force_sam_headroom or not type(rmm.mr.get_current_device_resource()) == type(
+            rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
+        ):
+            mr = rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
+            rmm.mr.set_current_device_resource(mr)
 
     if uvm_enabled:
         if not type(rmm.mr.get_current_device_resource()) == type(
@@ -167,8 +201,12 @@ def _configure_memory_resource(uvm_enabled: bool = False) -> None:
         ):
             rmm.mr.set_current_device_resource(rmm.mr.ManagedMemoryResource())
 
+    if sam_enabled or uvm_enabled:
         if not cp.cuda.get_allocator().__name__ == rmm_cupy_allocator.__name__:
             cp.cuda.set_allocator(rmm_cupy_allocator)
+
+    if sam_enabled:
+        import spark_rapids_ml.numpy_allocator
 
 
 def _get_default_params_from_func(
@@ -308,12 +346,19 @@ def _try_allocate_cp_empty_arrays(
     array_order: str,
     has_label: bool,
     logger: logging.Logger,
+    cuda_system_mem_enabled: bool,
 ) -> Tuple["cp.ndarray", Optional["cp.ndarray"]]:
     import cupy as cp
 
     device = cp.cuda.Device(gpu_id)
     free_mem, total_mem = device.mem_info
     nbytes_per_row = (dimension + 1 if has_label else 0) * np.dtype(dtype).itemsize
+
+    # if sam is enabled, use the available host memory as well
+    if cuda_system_mem_enabled:
+        import psutil
+
+        free_mem += psutil.virtual_memory().available
 
     target_mem = int(free_mem * gpu_mem_ratio_for_data)
     while target_mem >= 1_000_000:
@@ -349,6 +394,7 @@ def _concat_with_reserved_gpu_mem(
     array_order: str,
     multi_col_names: Optional[List[str]],
     logger: logging.Logger,
+    cuda_system_mem_enabled: bool,
 ) -> Tuple["cp.ndarray", Optional["cp.ndarray"], Optional[np.ndarray]]:
     # TODO: support sparse matrix
     # TODO: support row number
@@ -394,6 +440,7 @@ def _concat_with_reserved_gpu_mem(
                 array_order,
                 has_label,
                 logger,
+                cuda_system_mem_enabled,
             )
 
         np_rows = np_features.shape[0]
@@ -582,68 +629,122 @@ def _create_leaf_node(sc: SparkContext, impurity: str, model: Dict[str, Any]):  
     return java_leaf_node
 
 
-def translate_trees(sc: SparkContext, impurity: str, model: Dict[str, Any]):  # type: ignore
-    """Translate Cuml RandomForest trees to PySpark trees
+def translate_tree(sc: SparkContext, impurity: str, model: Dict[str, Any]):  # type: ignore
+    """Translate Treelite JSON representation to PySpark trees
 
-    Cuml trees
-    [
-      {
-        "nodeid": 0,
-        "split_feature": 3,
-        "split_threshold": 0.827687974732221,
-        "gain": 0.41999999999999998,
-        "instance_count": 10,
-        "yes": 1,
-        "no": 2,
-        "children": [
-          {
-            "nodeid": 1,
-            "leaf_value": [
-              1,
-              0
-            ],
-            "instance_count": 7
-          },
-          {
-            "nodeid": 2,
-            "leaf_value": [
-              0,
-              1
-            ],
-            "instance_count": 3
-          }
-        ]
-      }
-    ]
+    Converts Treelite JSON format to Spark MLlib tree format.
+    
+    Args:
+        sc: SparkContext
+        impurity: Impurity type ("gini", "entropy", or "variance")
+        model: Treelite JSON model portion representing a single tree
+        
+    Returns:
+        Spark tree 
+        
+ (see https://treelite.readthedocs.io/en/latest/tutorials/builder.html#example-regressor)
+    Example TreeliteJson Tree:
+    {
+        "num_nodes": 5,
+        "has_categorical_split": false,
+        "nodes": [{
+                "node_id": 0,
+                "split_feature_id": 0,
+                "default_left": true,
+                "node_type": "numerical_test_node",
+                "comparison_op": "<",
+                "threshold": 5.0,
+                "left_child": 1,
+                "right_child": 2
+            }, {
+                "node_id": 1,
+                "split_feature_id": 2,
+                "default_left": false,
+                "node_type": "numerical_test_node",
+                "comparison_op": "<",
+                "threshold": -3.0,
+                "left_child": 3,
+                "right_child": 4
+            }, {
+                "node_id": 2,
+                "leaf_value": 0.6000000238418579
+            }, {
+                "node_id": 3,
+                "leaf_value": -0.4000000059604645
+            }, {
+                "node_id": 4,
+                "leaf_value": 1.2000000476837159
+            }]
+    }
 
-    Spark trees,
+    Spark tree,
              InternalNode {split{featureIndex=3, threshold=0.827687974732221}, gain = 0.41999999999999998}
              /         \
            left        right
            /             \
     LeafNode           LeafNode
     """
-    if "split_feature" in model:
-        left_child_id = model["yes"]
-        right_child_id = model["no"]
+    tree = model
 
-        for child in model["children"]:
-            if child["nodeid"] == left_child_id:
-                left_child = child
-            elif child["nodeid"] == right_child_id:
-                right_child = child
-            else:
-                raise ValueError("Unexpected node id")
+    root_id = 0
+    nodes = tree["nodes"]
 
-        return _create_internal_node(
-            sc,
-            impurity,
-            model,
-            translate_trees(sc, impurity, left_child),
-            translate_trees(sc, impurity, right_child),
-        )
-    elif "leaf_value" in model:
-        return _create_leaf_node(sc, impurity, model)
+    # Create a mapping from node_id to node data
+    node_map = {node["node_id"]: node for node in nodes}
+
+    # Convert the tree starting from root
+    spark_tree = _convert_treelite_node(sc, impurity, node_map, root_id)
+    # spark_trees.append(spark_tree)
+
+    return spark_tree
+
+
+def _convert_treelite_node(sc: SparkContext, impurity: str, node_map: Dict[int, Dict[str, Any]], node_id: int):  # type: ignore
+    """Convert a single Treelite node to Spark MLlib node
+
+    Args:
+        sc: SparkContext
+        impurity: Impurity type
+        node_map: Dictionary mapping node_id to node data
+        node_id: ID of the node to convert
+
+    Returns:
+        Spark MLlib node (InternalNode or LeafNode)
+    """
+    node = node_map[node_id]
+
+    # Check if this is a leaf node
+    if "leaf_value" in node:
+        # Convert leaf node
+        leaf_model = {
+            "leaf_value": (
+                node["leaf_value"]
+                if isinstance(node["leaf_value"], list)
+                else [node["leaf_value"]]
+            ),
+            "instance_count": node.get("instance_count", 1),
+        }
+        return _create_leaf_node(sc, impurity, leaf_model)
+
+    # This is an internal node
+    left_child_id = node["left_child"]
+    right_child_id = node["right_child"]
+
+    # Convert children recursively
+    left_child = _convert_treelite_node(sc, impurity, node_map, left_child_id)
+    right_child = _convert_treelite_node(sc, impurity, node_map, right_child_id)
+
+    # Create internal node model in the format expected by _create_internal_node
+    internal_model = {
+        "split_feature": node["split_feature_id"],
+        "split_threshold": node["threshold"],
+        "gain": node.get("gain", 0.0),  # Treelite doesn't always provide gain
+        "instance_count": node.get("instance_count", 1),
+        "yes": left_child_id,
+        "no": right_child_id,
+    }
+
+    return _create_internal_node(sc, impurity, internal_model, left_child, right_child)
 
 
 # to the XGBOOST _get_unwrap_udt_fn in https://github.com/dmlc/xgboost/blob/master/python-package/xgboost/spark/core.py

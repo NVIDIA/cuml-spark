@@ -592,7 +592,7 @@ class LinearRegression(
 
                 linear_regression = CumlLinearRegression(
                     handle=params[param_alias.handle],
-                    output_type="cudf",
+                    output_type="cupy",
                     **final_init_parameters,
                 )
 
@@ -605,7 +605,7 @@ class LinearRegression(
                 )
 
                 return {
-                    "coef_": linear_regression.coef_.to_numpy().tolist(),
+                    "coef_": linear_regression.coef_.get().tolist(),
                     "intercept_": linear_regression.intercept_,
                     "dtype": linear_regression.dtype.name,
                     "n_cols": linear_regression.n_cols,
@@ -1022,7 +1022,7 @@ class RandomForestRegressionModel(
         n_cols: int,
         dtype: str,
         treelite_model: Union[str, List[str]],
-        model_json: Union[List[str], List[List[str]]] = [],  # type: ignore
+        model_json: Union[str, List[str]] = [],  # type: ignore
     ):
         super().__init__(
             dtype=dtype,
