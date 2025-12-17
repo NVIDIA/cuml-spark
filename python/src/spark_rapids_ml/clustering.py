@@ -362,7 +362,7 @@ class KMeans(KMeansClass, _CumlEstimator, _KMeansCumlParams):
             params: Dict[str, Any],
         ) -> Dict[str, Any]:
             import cupy as cp
-            from cuml.cluster.kmeans import KMeans as CumlKMeans
+            from cuml.cluster.kmeans_mg import KMeansMG as CumlKMeans
 
             kmeans_object = CumlKMeans(
                 handle=params[param_alias.handle],
@@ -391,13 +391,11 @@ class KMeans(KMeansClass, _CumlEstimator, _KMeansCumlParams):
                 cuda_managed_mem_enabled,
                 cuda_system_mem_enabled,
                 cuda_system_mem_headroom,
-                force_sam_headroom=True,
             )
 
-            kmeans_object._fit(
+            kmeans_object.fit(
                 concated,
                 sample_weight=None,
-                multigpu=True,
             )
 
             logger = get_logger(cls)
@@ -507,15 +505,18 @@ class KMeansModel(KMeansClass, _CumlModelWithPredictionCol, _KMeansCumlParams):
         array_order = self._transform_array_order()
 
         def _construct_kmeans() -> CumlT:
+            import cupy as cp
             from cuml.cluster.kmeans import KMeans as CumlKMeans
 
+            from .utils import cudf_to_cuml_array
+
             kmeans = CumlKMeans(output_type="cupy", **cuml_alg_params)
-            from spark_rapids_ml.utils import cudf_to_cuml_array
 
             kmeans.n_features_in_ = n_cols
             kmeans.dtype = np.dtype(dtype)
             kmeans.cluster_centers_ = cudf_to_cuml_array(
-                np.array(cluster_centers_).astype(dtype), order=array_order
+                cp.array(cluster_centers_, dtype=dtype, order=array_order),
+                order=array_order,
             )
             return kmeans
 
@@ -997,7 +998,6 @@ class DBSCANModel(
                 cuda_managed_mem_enabled,
                 cuda_system_mem_enabled,
                 cuda_system_mem_headroom,
-                force_sam_headroom=True,
             )
 
             # Set out_dtype tp 64bit to get larger indexType in cuML for avoiding overflow
@@ -1093,6 +1093,12 @@ class DBSCANModel(
         idCol_name = self.getIdCol()
 
         default_num_partitions = dataset.rdd.getNumPartitions()
+
+        # we must hash repartition here to create a shuffle boundary for barrier rdd to work in all cases, even if
+        # dataset.rdd.getNumPartitions() == self.num_workers as dataset parents might have different numbers of partitions.
+        # a try around barrier is not possible here since the barrier logic is not executed
+        # until the caller does something with the lazily returned dataframe.
+        dataset = dataset.repartition(self.num_workers)
 
         rdd = self._call_cuml_fit_func(
             dataset=dataset,

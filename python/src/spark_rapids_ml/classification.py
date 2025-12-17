@@ -418,6 +418,13 @@ class RandomForestClassifier(
     max_batch_size: int (default = 4096)
         Maximum number of nodes that can be processed in a given batch.
 
+    Notes
+    -----
+        The label column is required to be an integer in the range ``0, 1, ..., num_classes - 1``.  Moreover, for fit() to succeed,
+        all values in this range are required to be present in the input data and also each worker must receive the full range of values.
+        If this is not the case, an error will be raised with possible work arounds being to remap the labels to the expected range,
+        increase the number of very rare label occurrences in the input data, rerun with fewer workers, or shuffle the input data.
+
     Examples
     --------
     >>> import numpy
@@ -1011,53 +1018,14 @@ class LogisticRegression(
             # Use cupy to standardize dataset as a workaround to gain better numeric stability
             standarization_with_cupy = standardization and not is_sparse
             if standarization_with_cupy is True:
-                import cupy as cp
+                from .utils import _standardize_dataset
 
-                if isinstance(concated, np.ndarray):
-                    concated = cp.array(concated)
-                elif isinstance(concated, pd.DataFrame):
-                    concated = cp.array(concated.values)
-                else:
-                    assert isinstance(
-                        concated, cp.ndarray
-                    ), "only numpy array, cupy array, and pandas dataframe are supported when standardization_with_cupy is on"
-
-                mean_partial = concated.sum(axis=0) / pdesc.m
-
-                import json
-
-                from pyspark import BarrierTaskContext
-
-                context = BarrierTaskContext.get()
-
-                def all_gather_then_sum(
-                    cp_array: cp.ndarray, dtype: Union[np.float32, np.float64]
-                ) -> cp.ndarray:
-                    msgs = context.allGather(json.dumps(cp_array.tolist()))
-                    arrays = [json.loads(p) for p in msgs]
-                    array_sum = np.sum(arrays, axis=0).astype(dtype)
-                    return cp.array(array_sum)
-
-                mean = all_gather_then_sum(mean_partial, concated.dtype)
-                concated -= mean
-
-                l2 = cp.linalg.norm(concated, ord=2, axis=0)
-
-                var_partial = l2 * l2 / (pdesc.m - 1)
-                var = all_gather_then_sum(var_partial, concated.dtype)
-
-                assert cp.all(
-                    var >= 0
-                ), "numeric instable detected when calculating variance. Got negative variance"
-
-                stddev = cp.sqrt(var)
-
-                stddev_inv = cp.where(stddev != 0, 1.0 / stddev, 1.0)
-
-                if fit_intercept is False:
-                    concated += mean
-
-                concated *= stddev_inv
+                # TODO: fix for multiple param sweep that change standardization and/or fit intercept (unlikely scenario) since
+                # data modification effects all params.  currently not invoked in these cases by fitMultiple (see fitMultiple)
+                _tmp_data = [(concated, None, None)]
+                # this will modify concated in place through _tmp_data
+                mean, stddev = _standardize_dataset(_tmp_data, pdesc, fit_intercept)
+                concated = _tmp_data[0][0]
 
             def _single_fit(init_parameters: Dict[str, Any]) -> Dict[str, Any]:
                 if standarization_with_cupy is True:
@@ -1078,12 +1046,10 @@ class LogisticRegression(
                 logistic_regression = LogisticRegressionMG(
                     handle=params[param_alias.handle],
                     linesearch_max_iter=20,
+                    penalty_normalized=False,
+                    lbfgs_memory=10,
                     **init_parameters,
                 )
-
-                logistic_regression.solver_model.penalty_normalized = False
-                logistic_regression.solver_model.lbfgs_memory = 10
-                logistic_regression.solver_model.linesearch_max_iter = 20
 
                 if is_sparse and pdesc.partition_max_nnz > nnz_limit_for_int32:  # type: ignore
                     logistic_regression._convert_index = np.int64
@@ -1103,19 +1069,60 @@ class LogisticRegression(
                     cuda_managed_mem_enabled,
                     cuda_system_mem_enabled,
                     cuda_system_mem_headroom,
-                    force_sam_headroom=True,
                 )
 
-                logistic_regression.fit(
-                    [(concated, concated_y)],
-                    pdesc.m,
-                    pdesc.n,
-                    pdesc.parts_rank_size,
-                    pdesc.rank,
-                )
+                try:
+                    logistic_regression.fit(
+                        [(concated, concated_y)],
+                        pdesc.m,
+                        pdesc.n,
+                        pdesc.parts_rank_size,
+                        pdesc.rank,
+                    )
+                except ValueError as e:
+                    # cuML now raises an exception if only one label value is observed.
+                    # see e.g. https://github.com/rapidsai/cuml/blob/f7f175d7ae1c63e8eed3b66e581f328e0fd335be/python/cuml/cuml/solvers/qn.pyx#L96
+                    # Here we suppress in that case until later as we can handle it when
+                    # fitIntercept=True.
+                    import traceback
 
-                coef_ = logistic_regression.coef_
-                intercept_ = logistic_regression.intercept_
+                    exc_str = traceback.format_exc()
+                    if not "requires n_classes == 2 (got 1)" in exc_str:
+                        raise
+
+                # check if invalid label exists.  Do this first before handling 1 label value to match apache spark.
+                for class_val in logistic_regression.classes_.tolist():
+                    if class_val < 0:
+                        raise RuntimeError(
+                            f"Labels MUST be in [0, 2147483647), but got {class_val}"
+                        )
+                    elif not class_val.is_integer():
+                        raise RuntimeError(
+                            f"Labels MUST be Integers, but got {class_val}"
+                        )
+
+                n_cols = logistic_regression.n_cols
+
+                if len(logistic_regression.classes_) == 1:
+                    class_val = logistic_regression.classes_[0]
+                    # TODO: match Spark to use max(class_list) to calculate the number of classes
+                    # Cuml currently uses unique(class_list)
+                    if class_val != 1.0 and class_val != 0.0:
+                        raise RuntimeError(
+                            "class value must be either 1. or 0. when dataset has one label"
+                        )
+
+                    import cupy as cp
+
+                    coef_ = cp.zeros(n_cols)
+                    intercept_ = cp.array(
+                        [float("inf") if class_val == 1.0 else float("-inf")]
+                    )
+                    n_iter_ = 0
+                else:
+                    coef_ = logistic_regression.coef_
+                    intercept_ = logistic_regression.intercept_
+                    n_iter_ = logistic_regression.n_iter_[0]
 
                 if standarization_with_cupy is True:
                     import cupy as cp
@@ -1139,8 +1146,6 @@ class LogisticRegression(
                     )
                     intercept_array -= intercept_mean
 
-                n_cols = logistic_regression.n_cols
-
                 # index_dtype is only available in sparse logistic regression. It records the dtype of indices array and indptr array that were used in C++ computation layer. Its value can be 'int32' or 'int64'.
                 index_dtype = (
                     str(logistic_regression.index_dtype)
@@ -1149,41 +1154,18 @@ class LogisticRegression(
                 )
 
                 model = {
-                    "coef_": coef_[:, :n_cols].tolist(),
+                    "coef_": (
+                        coef_[:, :n_cols].tolist()
+                        if coef_.ndim == 2
+                        else [coef_[:n_cols].tolist()]
+                    ),
                     "intercept_": intercept_.tolist(),
                     "classes_": logistic_regression.classes_.tolist(),
                     "n_cols": n_cols,
                     "dtype": logistic_regression.dtype.name,
-                    "num_iters": logistic_regression.solver_model.num_iters,
-                    "objective": logistic_regression.solver_model.objective,
+                    "num_iters": n_iter_,
                     "index_dtype": index_dtype,
                 }
-
-                # check if invalid label exists
-                for class_val in model["classes_"]:
-                    if class_val < 0:
-                        raise RuntimeError(
-                            f"Labels MUST be in [0, 2147483647), but got {class_val}"
-                        )
-                    elif not class_val.is_integer():
-                        raise RuntimeError(
-                            f"Labels MUST be Integers, but got {class_val}"
-                        )
-
-                if len(logistic_regression.classes_) == 1:
-                    class_val = logistic_regression.classes_[0]
-                    # TODO: match Spark to use max(class_list) to calculate the number of classes
-                    # Cuml currently uses unique(class_list)
-                    if class_val != 1.0 and class_val != 0.0:
-                        raise RuntimeError(
-                            "class value must be either 1. or 0. when dataset has one label"
-                        )
-
-                    if init_parameters["fit_intercept"] is True:
-                        model["coef_"] = [[0.0] * n_cols]
-                        model["intercept_"] = [
-                            float("inf") if class_val == 1.0 else float("-inf")
-                        ]
 
                 del logistic_regression
                 return model
@@ -1232,7 +1214,6 @@ class LogisticRegression(
                 StructField("n_cols", IntegerType(), False),
                 StructField("dtype", StringType(), False),
                 StructField("num_iters", IntegerType(), False),
-                StructField("objective", DoubleType(), False),
                 StructField("index_dtype", StringType(), False),
             ]
         )
@@ -1241,8 +1222,8 @@ class LogisticRegression(
         logger = get_logger(self.__class__)
         if len(result["classes_"]) == 1:
             if self.getFitIntercept() is False:
-                logger.warning(
-                    "All labels belong to a single class and fitIntercept=false. It's a dangerous ground, so the algorithm may not converge."
+                raise ValueError(
+                    "All labels belong to a single class and fitIntercept=false. This is not supported.  Please use fitIntercept=true."
                 )
             else:
                 logger.warning(
@@ -1338,7 +1319,6 @@ class LogisticRegressionModel(
         n_cols: int,
         dtype: str,
         num_iters: int,
-        objective: float,
     ) -> None:
         super().__init__(
             dtype=dtype,
@@ -1347,7 +1327,6 @@ class LogisticRegressionModel(
             intercept_=intercept_,
             classes_=classes_,
             num_iters=num_iters,
-            objective=objective,
         )
         self.coef_ = coef_
         self.intercept_ = intercept_
@@ -1355,7 +1334,6 @@ class LogisticRegressionModel(
         self._lr_spark_model: Optional[SparkLogisticRegressionModel] = None
         self._num_classes = len(self.classes_)
         self.num_iters = num_iters
-        self.objective = objective
         self._this_model = self
 
     def cpu(self) -> SparkLogisticRegressionModel:
@@ -1502,8 +1480,9 @@ class LogisticRegressionModel(
         def _construct_lr() -> CumlT:
             import cupy as cp
             import numpy as np
-            from cuml.internals.input_utils import input_to_cuml_array
             from cuml.linear_model.logistic_regression_mg import LogisticRegressionMG
+
+            from .utils import cudf_to_cuml_array
 
             _intercepts, _coefs = (
                 (intercept_, coef_) if num_models > 1 else ([intercept_], [coef_])
@@ -1512,26 +1491,18 @@ class LogisticRegressionModel(
 
             for i in range(num_models):
                 lr = LogisticRegressionMG(output_type="cupy")
-                # need this to revert a change in cuML targeting sklearn compat.
-                lr.n_features_in_ = None
+
+                lr.n_features_in_ = n_cols
                 lr.n_cols = n_cols
                 lr.dtype = np.dtype(dtype)
 
                 gpu_intercept_ = cp.array(_intercepts[i], order="C", dtype=dtype)
+                gpu_coef_ = cp.array(_coefs[i], order="F", dtype=dtype)
 
-                gpu_coef_ = cp.array(_coefs[i], order="F", dtype=dtype).T
-                gpu_stacked = cp.vstack([gpu_coef_, gpu_intercept_])
-                lr.solver_model._coef_ = input_to_cuml_array(
-                    gpu_stacked, order="C"
-                ).array
+                lr.classes_ = np.array(classes_, order="F").astype(dtype)
+                lr.coef_ = cudf_to_cuml_array(gpu_coef_, order="F")
+                lr.intercept_ = cudf_to_cuml_array(gpu_intercept_, order="C")
 
-                lr.classes_ = input_to_cuml_array(
-                    np.array(classes_, order="F").astype(dtype)
-                ).array.to_output(output_type="numpy")
-                lr._num_classes = len(lr.classes_)
-
-                lr.loss = "sigmoid" if lr._num_classes <= 2 else "softmax"
-                lr.solver_model.qnparams = lr.create_qnparams()
                 lrs.append(lr)
 
             return lrs

@@ -76,12 +76,15 @@ from .common.cuml_context import CumlContext
 from .metrics import EvalMetricInfo
 from .params import _CumlParams
 from .utils import (
+    FitInputType,
     _ArrayOrder,
     _configure_memory_resource,
     _get_gpu_id,
     _get_spark_session,
     _is_local,
     _is_standalone_or_localcluster,
+    _SingleNpArrayBatchType,
+    _SinglePdDataFrameBatchType,
     dtype_to_pyspark_type,
     get_logger,
 )
@@ -94,14 +97,6 @@ if TYPE_CHECKING:
 CumlT = Any
 
 _CumlParamMap = Dict[str, Any]
-
-_SinglePdDataFrameBatchType = Tuple[
-    pd.DataFrame, Optional[pd.DataFrame], Optional[pd.DataFrame]
-]
-_SingleNpArrayBatchType = Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]
-
-# FitInputType is type of [(feature, label), ...]
-FitInputType = Union[List[_SinglePdDataFrameBatchType], List[_SingleNpArrayBatchType]]
 
 # TransformInput type
 TransformInputType = Union["cudf.DataFrame", np.ndarray]
@@ -638,6 +633,111 @@ class _CumlCaller(_CumlParams, _CumlCommon):
         """
         raise NotImplementedError()
 
+    def _skip_stage_level_scheduling(self, spark_version: str, conf: SparkConf) -> bool:
+        """Check if stage-level scheduling is not needed,
+        return true to skip stage-level scheduling"""
+
+        if spark_version < "3.4.0":
+            self.logger.info(
+                "Stage-level scheduling in spark-rapids-ml requires spark version 3.4.0+"
+            )
+            return True
+
+        if "3.4.0" <= spark_version < "3.5.1" and not _is_standalone_or_localcluster(
+            conf
+        ):
+            self.logger.info(
+                "For Spark %s, Stage-level scheduling in spark-rapids-ml requires spark "
+                "standalone or local-cluster mode",
+                spark_version,
+            )
+            return True
+
+        executor_cores = conf.get("spark.executor.cores")
+        executor_gpus = conf.get("spark.executor.resource.gpu.amount")
+        if executor_cores is None or executor_gpus is None:
+            self.logger.info(
+                "Stage-level scheduling in spark-rapids-ml requires spark.executor.cores, "
+                "spark.executor.resource.gpu.amount to be set."
+            )
+            return True
+
+        if int(executor_cores) == 1:
+            # there will be only 1 task running at any time.
+            self.logger.info(
+                "Stage-level scheduling in spark-rapids-ml requires spark.executor.cores > 1 "
+            )
+            return True
+
+        if int(executor_gpus) > 1:
+            # For spark.executor.resource.gpu.amount > 1, we suppose user knows how to configure
+            # to make spark-rapids-ml run successfully.
+            self.logger.info(
+                "Stage-level scheduling in spark-rapids-ml will not work "
+                "when spark.executor.resource.gpu.amount>1"
+            )
+            return True
+
+        task_gpu_amount = conf.get("spark.task.resource.gpu.amount")
+
+        if task_gpu_amount is None:
+            # The ETL tasks will not grab a gpu when spark.task.resource.gpu.amount is not set,
+            # but with stage-level scheduling, we can make training task grab the gpu.
+            return False
+
+        if float(task_gpu_amount) == float(executor_gpus):
+            # spark.executor.resource.gpu.amount=spark.task.resource.gpu.amount "
+            # results in only 1 task running at a time, which may cause perf issue.
+            return True
+
+        # We can enable stage-level scheduling
+        return False
+
+    def _try_stage_level_scheduling(self, rdd: RDD) -> RDD:
+        ss = _get_spark_session()
+        sc = ss.sparkContext
+
+        if _is_local(sc) or self._skip_stage_level_scheduling(ss.version, sc.getConf()):
+            return rdd
+
+        # executor_cores will not be None
+        executor_cores = ss.sparkContext.getConf().get("spark.executor.cores")
+        assert executor_cores is not None
+
+        from pyspark.resource.profile import ResourceProfileBuilder
+        from pyspark.resource.requests import TaskResourceRequests
+
+        # each training task requires cpu cores > total executor cores/2 which can
+        # ensure each training task be sent to different executor.
+        #
+        # Please note that we can't set task_cores to the value which is smaller than total executor cores/2
+        # because only task_gpus can't ensure the tasks be sent to different executor even task_gpus=1.0
+        #
+        # If spark-rapids enabled. we don't allow other ETL task running alongside training task to avoid OOM
+        spark_plugins = ss.conf.get("spark.plugins", " ")
+        assert spark_plugins is not None
+        spark_rapids_sql_enabled = ss.conf.get("spark.rapids.sql.enabled", "true")
+        assert spark_rapids_sql_enabled is not None
+
+        task_cores = (
+            int(executor_cores)
+            if "com.nvidia.spark.SQLPlugin" in spark_plugins
+            and "true" == spark_rapids_sql_enabled.lower()
+            else (int(executor_cores) // 2) + 1
+        )
+        # task_gpus means how many slots per gpu address the task requires,
+        # it does mean how many gpus it would like to require, so it can be any value of (0, 0.5] or 1.
+        task_gpus = 1.0
+
+        treqs = TaskResourceRequests().cpus(task_cores).resource("gpu", task_gpus)
+        rp = ResourceProfileBuilder().require(treqs).build
+
+        self.logger.info(
+            f"Training tasks require the resource(cores={task_cores}, gpu={task_gpus})"
+        )
+
+        return rdd.withResources(rp)
+
     def _call_cuml_fit_func(
         self,
         dataset: DataFrame,
@@ -911,6 +1011,8 @@ class _CumlCaller(_CumlParams, _CumlCommon):
             .mapPartitions(lambda x: x)
         )
 
+        pipelined_rdd = self._try_stage_level_scheduling(pipelined_rdd)
+
         return pipelined_rdd
 
     def _fit_array_order(self) -> _ArrayOrder:
@@ -1063,6 +1165,8 @@ class _CumlEstimator(Estimator, _CumlCaller):
             using `paramMaps[index]`. `index` values may not be sequential.
         """
 
+        logger = get_logger(self.__class__)
+
         if self._use_cpu_fallback():
             return super().fitMultiple(dataset, paramMaps)
 
@@ -1070,6 +1174,18 @@ class _CumlEstimator(Estimator, _CumlCaller):
             for paramMap in paramMaps:
                 if self._use_cpu_fallback(paramMap):
                     return super().fitMultiple(dataset, paramMaps)
+                # standardization and fitIntercept currently may modify the dataset and is done once outside the param loop.
+                # If either appears in a param map, fall back to regular multiple passfitMultiple.
+                # TODO: sparse logistic regression does not modify data so ok in that case.  Need logic to check dataset to detect that case.
+                # TODO: implement single pass with either of these by processing param maps with no
+                # standardization or fitIntercept before those with standardization or fitIntercept.
+                param_names = [p.name for p in paramMap.keys()]
+                for unsupported in ["standardization", "fitIntercept"]:
+                    if unsupported in param_names:
+                        logger.warning(
+                            f"{unsupported} in param maps not supported for one pass GPU fitMultiple. Falling back to baseline fitMultiple."
+                        )
+                        return super().fitMultiple(dataset, paramMaps)
 
             # reach here if no cpu fallback
             estimator = self.copy()
@@ -1081,127 +1197,35 @@ class _CumlEstimator(Estimator, _CumlCaller):
         else:
             return super().fitMultiple(dataset, paramMaps)
 
-    def _skip_stage_level_scheduling(self, spark_version: str, conf: SparkConf) -> bool:
-        """Check if stage-level scheduling is not needed,
-        return true to skip stage-level scheduling"""
-
-        if spark_version < "3.4.0":
-            self.logger.info(
-                "Stage-level scheduling in spark-rapids-ml requires spark version 3.4.0+"
-            )
-            return True
-
-        if "3.4.0" <= spark_version < "3.5.1" and not _is_standalone_or_localcluster(
-            conf
-        ):
-            self.logger.info(
-                "For Spark %s, Stage-level scheduling in spark-rapids-ml requires spark "
-                "standalone or local-cluster mode",
-                spark_version,
-            )
-            return True
-
-        executor_cores = conf.get("spark.executor.cores")
-        executor_gpus = conf.get("spark.executor.resource.gpu.amount")
-        if executor_cores is None or executor_gpus is None:
-            self.logger.info(
-                "Stage-level scheduling in spark-rapids-ml requires spark.executor.cores, "
-                "spark.executor.resource.gpu.amount to be set."
-            )
-            return True
-
-        if int(executor_cores) == 1:
-            # there will be only 1 task running at any time.
-            self.logger.info(
-                "Stage-level scheduling in spark-rapids-ml requires spark.executor.cores > 1 "
-            )
-            return True
-
-        if int(executor_gpus) > 1:
-            # For spark.executor.resource.gpu.amount > 1, we suppose user knows how to configure
-            # to make spark-rapids-ml run successfully.
-            self.logger.info(
-                "Stage-level scheduling in spark-rapids-ml will not work "
-                "when spark.executor.resource.gpu.amount>1"
-            )
-            return True
-
-        task_gpu_amount = conf.get("spark.task.resource.gpu.amount")
-
-        if task_gpu_amount is None:
-            # The ETL tasks will not grab a gpu when spark.task.resource.gpu.amount is not set,
-            # but with stage-level scheduling, we can make training task grab the gpu.
-            return False
-
-        if float(task_gpu_amount) == float(executor_gpus):
-            # spark.executor.resource.gpu.amount=spark.task.resource.gpu.amount "
-            # results in only 1 task running at a time, which may cause perf issue.
-            return True
-
-        # We can enable stage-level scheduling
-        return False
-
-    def _try_stage_level_scheduling(self, rdd: RDD) -> RDD:
-        ss = _get_spark_session()
-        sc = ss.sparkContext
-
-        if _is_local(sc) or self._skip_stage_level_scheduling(ss.version, sc.getConf()):
-            return rdd
-
-        # executor_cores will not be None
-        executor_cores = ss.sparkContext.getConf().get("spark.executor.cores")
-        assert executor_cores is not None
-
-        from pyspark.resource.profile import ResourceProfileBuilder
-        from pyspark.resource.requests import TaskResourceRequests
-
-        # each training task requires cpu cores > total executor cores/2 which can
-        # ensure each training task be sent to different executor.
-        #
-        # Please note that we can't set task_cores to the value which is smaller than total executor cores/2
-        # because only task_gpus can't ensure the tasks be sent to different executor even task_gpus=1.0
-        #
-        # If spark-rapids enabled. we don't allow other ETL task running alongside training task to avoid OOM
-        spark_plugins = ss.conf.get("spark.plugins", " ")
-        assert spark_plugins is not None
-        spark_rapids_sql_enabled = ss.conf.get("spark.rapids.sql.enabled", "true")
-        assert spark_rapids_sql_enabled is not None
-
-        task_cores = (
-            int(executor_cores)
-            if "com.nvidia.spark.SQLPlugin" in spark_plugins
-            and "true" == spark_rapids_sql_enabled.lower()
-            else (int(executor_cores) // 2) + 1
-        )
-        # task_gpus means how many slots per gpu address the task requires,
-        # it does mean how many gpus it would like to require, so it can be any value of (0, 0.5] or 1.
-        task_gpus = 1.0
-
-        treqs = TaskResourceRequests().cpus(task_cores).resource("gpu", task_gpus)
-        rp = ResourceProfileBuilder().require(treqs).build
-
-        self.logger.info(
-            f"Training tasks require the resource(cores={task_cores}, gpu={task_gpus})"
-        )
-
-        return rdd.withResources(rp)
-
     def _fit_internal(
         self, dataset: DataFrame, paramMaps: Optional[Sequence["ParamMap"]]
     ) -> List["_CumlModel"]:
         """Fit multiple models according to the parameters maps"""
-        pipelined_rdd = self._call_cuml_fit_func(
-            dataset=dataset,
-            partially_collect=True,
-            paramMaps=paramMaps,
-        )
-
-        pipelined_rdd = self._try_stage_level_scheduling(pipelined_rdd)
 
         self.logger.info(
             f"Training spark-rapids-ml with {self.num_workers} worker(s) ..."
         )
-        rows = pipelined_rdd.collect()
+        try:
+            pipelined_rdd = self._call_cuml_fit_func(
+                dataset=dataset,
+                partially_collect=True,
+                paramMaps=paramMaps,
+            )
+            rows = pipelined_rdd.collect()
+        except Exception as e:
+            if "BarrierJobUnsupportedRDDChainException" in str(e):
+                self.logger.warning(
+                    "Barrier rdd error encountered with input dataset. Retrying with repartitioning."
+                )
+                pipelined_rdd = self._call_cuml_fit_func(
+                    dataset=dataset.repartition(self.num_workers),
+                    partially_collect=True,
+                    paramMaps=paramMaps,
+                )
+                rows = pipelined_rdd.collect()
+            else:
+                raise
+
         self.logger.info("Finished training")
 
         models: List["_CumlModel"] = [None]  # type: ignore

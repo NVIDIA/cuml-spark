@@ -43,6 +43,13 @@ from pyspark.sql import Column, SparkSession
 from pyspark.sql.types import ArrayType, FloatType
 
 _ArrayOrder = Literal["C", "F"]
+_SinglePdDataFrameBatchType = Tuple[
+    pd.DataFrame, Optional[pd.DataFrame], Optional[pd.DataFrame]
+]
+_SingleNpArrayBatchType = Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]
+
+# FitInputType is type of [(feature, label), ...]
+FitInputType = Union[List[_SinglePdDataFrameBatchType], List[_SingleNpArrayBatchType]]
 
 
 def _method_names_from_param(spark_param_name: str) -> List[str]:
@@ -156,20 +163,32 @@ def _get_gpu_id(task_context: TaskContext) -> int:
     return gpu_id
 
 
+# When changing default rmm memory resources we retain the old ones
+# in this global array singleton to so that any (C++) allocations using them can
+# invoke the corresponding deallocate methods.  They will get cleaned up only when
+# the process exits.  This avoids a segfault in the case of creating a new
+# SAM resource with a smaller headroom.
+_old_memory_resources = []
+
+# keep track of last headroom to check if new sam mr is needed.
+_last_sam_headroom_size = None
+
+
 def _configure_memory_resource(
     uvm_enabled: bool = False,
     sam_enabled: bool = False,
     sam_headroom: Optional[int] = None,
-    force_sam_headroom: bool = False,
 ) -> None:
     import cupy as cp
     import rmm
     from cuda.bindings import runtime
     from rmm.allocators.cupy import rmm_cupy_allocator
 
-    _SYSTEM_MEMORY_SUPPORTED = rmm._cuda.gpu.getDeviceAttribute(
+    global _last_sam_headroom_size
+
+    _SYSTEM_MEMORY_SUPPORTED = rmm._cuda.gpu.getDeviceAttribute(  # type: ignore
         runtime.cudaDeviceAttr.cudaDevAttrPageableMemoryAccess,
-        rmm._cuda.gpu.getDevice(),
+        rmm._cuda.gpu.getDevice(),  # type: ignore
     )
 
     if not _SYSTEM_MEMORY_SUPPORTED and sam_enabled:
@@ -186,12 +205,16 @@ def _configure_memory_resource(
         if not type(rmm.mr.get_current_device_resource()) == type(
             rmm.mr.SystemMemoryResource()
         ):
+            _old_memory_resources.append(rmm.mr.get_current_device_resource())
+            _last_sam_headroom_size = None
             mr = rmm.mr.SystemMemoryResource()
             rmm.mr.set_current_device_resource(mr)
     elif sam_enabled and sam_headroom is not None:
-        if force_sam_headroom or not type(rmm.mr.get_current_device_resource()) == type(
-            rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
-        ):
+        if sam_headroom != _last_sam_headroom_size or not type(
+            rmm.mr.get_current_device_resource()
+        ) == type(rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)):
+            _old_memory_resources.append(rmm.mr.get_current_device_resource())
+            _last_sam_headroom_size = sam_headroom
             mr = rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
             rmm.mr.set_current_device_resource(mr)
 
@@ -199,6 +222,7 @@ def _configure_memory_resource(
         if not type(rmm.mr.get_current_device_resource()) == type(
             rmm.mr.ManagedMemoryResource()
         ):
+            _old_memory_resources.append(rmm.mr.get_current_device_resource())
             rmm.mr.set_current_device_resource(rmm.mr.ManagedMemoryResource())
 
     if sam_enabled or uvm_enabled:
@@ -809,3 +833,112 @@ def getInputOrFeaturesCols(est: Union[Estimator, Transformer]) -> str:
         else getattr(est, "getInputCol")
     )
     return getter()
+
+
+def _standardize_dataset(
+    data: FitInputType, pdesc: PartitionDescriptor, fit_intercept: bool
+) -> Tuple["cp.ndarray", "cp.ndarray"]:
+    """Inplace standardize the dataset feature and optionally label columns
+
+    Args:
+        data: dataset to standardize (including features and label)
+        pdesc: Partition descriptor
+        fit_intercept: Whether to fit intercept in calling fit function.
+
+    Returns:
+        Mean and standard deviation of features and label columns (latter is last element if present)
+        Modifies data entries by replacing entries with standardized data on gpu.
+        If data is already on gpu, modifies in place (i.e. no copy is made).
+    """
+    import cupy as cp
+
+    mean_partials_labels = (
+        cp.zeros(1, dtype=data[0][1].dtype) if data[0][1] is not None else None
+    )
+    mean_partials = [cp.zeros(pdesc.n, dtype=data[0][0].dtype), mean_partials_labels]
+    for i in range(len(data)):
+        _data = []
+        for j in range(2):
+            if data[i][j] is not None:
+
+                if isinstance(data[i][j], cp.ndarray):
+                    _data.append(data[i][j])  # type: ignore
+                elif isinstance(data[i][j], np.ndarray):
+                    _data.append(cp.array(data[i][j]))  # type: ignore
+                elif isinstance(data[i][j], pd.DataFrame) or isinstance(
+                    data[i][j], pd.Series
+                ):
+                    _data.append(cp.array(data[i][j].values))  # type: ignore
+                else:
+                    raise ValueError("Unsupported data type: ", type(data[i][j]))
+                mean_partials[j] += _data[j].sum(axis=0) / pdesc.m  # type: ignore
+            else:
+                _data.append(None)
+        data[i] = (_data[0], _data[1], data[i][2])  # type: ignore
+
+    import json
+
+    from pyspark import BarrierTaskContext
+
+    context = BarrierTaskContext.get()
+
+    def all_gather_then_sum(
+        cp_array: cp.ndarray, dtype: Union[np.float32, np.float64]
+    ) -> cp.ndarray:
+        msgs = context.allGather(json.dumps(cp_array.tolist()))
+        arrays = [json.loads(p) for p in msgs]
+        array_sum = np.sum(arrays, axis=0).astype(dtype)
+        return cp.array(array_sum)
+
+    if mean_partials[1] is not None:
+        mean_partial = cp.concatenate(mean_partials)  # type: ignore
+    else:
+        mean_partial = mean_partials[0]
+    mean = all_gather_then_sum(mean_partial, mean_partial.dtype)
+
+    _mean = (mean[:-1], mean[-1]) if mean_partials[1] is not None else (mean, None)
+
+    var_partials_labels = (
+        cp.zeros(1, dtype=data[0][1].dtype) if data[0][1] is not None else None
+    )
+    var_partials = [cp.zeros(pdesc.n, dtype=data[0][0].dtype), var_partials_labels]
+    for i in range(len(data)):
+        for j in range(2):
+            if data[i][j] is not None and _mean[j] is not None:
+                __data = data[i][j]
+                __data -= _mean[j]  # type: ignore
+                l2 = cp.linalg.norm(__data, ord=2, axis=0)
+                var_partials[j] += l2 * l2 / (pdesc.m - 1)
+
+    if var_partials[1] is not None:
+        var_partial = cp.concatenate((var_partials[0], var_partials[1]))
+    else:
+        var_partial = var_partials[0]
+    var = all_gather_then_sum(var_partial, var_partial.dtype)
+
+    assert cp.all(
+        var >= 0
+    ), "numeric instable detected when calculating variance. Got negative variance"
+
+    stddev = cp.sqrt(var)
+    stddev_inv = cp.where(stddev != 0, 1.0 / stddev, 1.0)
+    _stddev_inv = (
+        (stddev_inv[:-1], stddev_inv[-1])
+        if var_partials[1] is not None
+        else (stddev_inv, None)
+    )
+
+    if fit_intercept is False:
+        for i in range(len(data)):
+            for j in range(2):
+                if data[i][j] is not None and _mean[j] is not None:
+                    __data = data[i][j]
+                    __data += _mean[j]  # type: ignore
+
+    for i in range(len(data)):
+        for j in range(2):
+            if data[i][j] is not None and _stddev_inv[j] is not None:
+                __data = data[i][j]
+                __data *= _stddev_inv[j]  # type: ignore
+
+    return mean, stddev
