@@ -191,7 +191,6 @@ class LinearRegressionClass(_CumlClass):
             "maxIter": "max_iter",
             "regParam": "alpha",
             "solver": "solver",
-            "standardization": "normalize",  # TODO: standardization is carried out in cupy not cuml so need a new type of param mapped value to indicate that.
             "tol": "tol",
             "weightCol": None,
         }
@@ -219,7 +218,6 @@ class LinearRegressionClass(_CumlClass):
             "algorithm": "auto",
             "fit_intercept": True,
             "copy_X": True,
-            "normalize": False,
             "verbose": False,
             "alpha": 0.0001,
             "solver": "auto",  # in cuml 25.04 default was changed to auto which is mapped to eig internally in cuml

@@ -222,8 +222,8 @@ def _configure_memory_resource(
         ) == type(rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)):
             _old_memory_resources.append(rmm.mr.get_current_device_resource())
             _last_sam_headroom_size = sam_headroom
-            mr = rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
-            rmm.mr.set_current_device_resource(mr)
+            _mr = rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
+            rmm.mr.set_current_device_resource(_mr)
 
     if uvm_enabled:
         if not type(rmm.mr.get_current_device_resource()) == type(
