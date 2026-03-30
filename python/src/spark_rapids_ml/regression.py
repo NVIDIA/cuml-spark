@@ -787,6 +787,7 @@ class LinearRegressionModel(
 
         def _construct_lr() -> CumlT:
             from cuml.linear_model.linear_regression_mg import LinearRegressionMG
+            from pylibraft.common import Handle
 
             from .utils import cudf_to_cuml_array
 
@@ -796,7 +797,9 @@ class LinearRegressionModel(
             intercepts = intercept_ if isinstance(intercept_, list) else [intercept_]
 
             for i in range(len(coefs)):
-                lr = LinearRegressionMG(output_type="numpy", copy_X=False)
+                lr = LinearRegressionMG(
+                    handle=Handle(), output_type="numpy", copy_X=False
+                )
                 # need this to revert a change in cuML targeting sklearn compat.
                 lr.n_features_in_ = n_cols
                 lr.n_cols = n_cols

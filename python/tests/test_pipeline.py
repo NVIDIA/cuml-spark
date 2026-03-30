@@ -420,7 +420,7 @@ from spark_rapids_ml.umap import UMAP, UMAPModel
             Pipeline,
             UMAP,
             UMAPModel,
-            {"n_components": 1},
+            {"n_components": 2},
         ),
         (
             Pipeline,

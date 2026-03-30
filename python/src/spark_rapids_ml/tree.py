@@ -678,6 +678,7 @@ class _RandomForestModel(
         is_classification = self._is_classification()
         dtype = self.dtype
         num_classes = self._num_classes
+        n_cols = self.n_cols
 
         def _construct_rf() -> CumlT:
             if is_classification:
@@ -698,6 +699,7 @@ class _RandomForestModel(
                 rf = cuRf()
                 rf.n_classes_ = num_classes
                 rf.classes_ = np.arange(num_classes, dtype=np.int32)
+                rf.n_features_in_ = n_cols
                 rf._treelite_model_bytes = treelite.Model.deserialize_bytes(model)
 
                 rfs.append(rf)

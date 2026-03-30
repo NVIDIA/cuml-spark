@@ -411,8 +411,9 @@ class PCAModel(PCAClass, _CumlModelWithColumns, _PCACumlParams):
 
             """
             from cuml.decomposition.pca_mg import PCAMG as CumlPCAMG
+            from pylibraft.common import Handle
 
-            pca = CumlPCAMG(output_type="numpy", **cuml_alg_params)
+            pca = CumlPCAMG(handle=Handle(), output_type="numpy", **cuml_alg_params)
 
             pca.n_features_in_ = n_cols
 

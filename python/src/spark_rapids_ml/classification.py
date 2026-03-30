@@ -1481,6 +1481,7 @@ class LogisticRegressionModel(
             import cupy as cp
             import numpy as np
             from cuml.linear_model.logistic_regression_mg import LogisticRegressionMG
+            from pylibraft.common import Handle
 
             from .utils import cudf_to_cuml_array
 
@@ -1490,7 +1491,7 @@ class LogisticRegressionModel(
             lrs = []
 
             for i in range(num_models):
-                lr = LogisticRegressionMG(output_type="cupy")
+                lr = LogisticRegressionMG(handle=Handle(), output_type="cupy")
 
                 lr.n_features_in_ = n_cols
                 lr.n_cols = n_cols

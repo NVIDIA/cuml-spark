@@ -135,6 +135,7 @@ class UMAPClass(_CumlClass):
             "build_algo": "auto",
             "build_kwds": None,
             "device_ids": None,
+            "force_serial_epochs": False,
         }
 
     def _pyspark_class(self) -> Optional[ABCMeta]:
