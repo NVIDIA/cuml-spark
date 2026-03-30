@@ -15,7 +15,7 @@
 
 
 cluster_type=${1:-gpu_etl}
-db_version=${2:-13.3}
+db_version=${2:-15.4}
 
 if [[ $cluster_type == "gpu" || $cluster_type == "gpu_etl" ]]; then
     num_cpus=0
@@ -25,13 +25,13 @@ elif [[ $cluster_type == "cpu" ]]; then
     num_gpus=0
 else
     echo "unknown cluster type $cluster_type"
-    echo "usage: $0 cpu|gpu|gpu_etl [12.2|13.3|14.3|15.4]" 
+    echo "usage: $0 cpu|gpu|gpu_etl [15.4]" 
     exit 1
 fi
 
-if [[ $db_version > 13.3 && $cluster_type == "gpu_etl" ]]; then
+if [[ $db_version > 16.4 && $cluster_type == "gpu_etl" ]]; then
     echo "spark rapids etl plugin is not supported on databricks ${db_version}"
-    echo "please specify db_version 12.2 or 13.3 for cluster type gpu_etl"
+    echo "please specify db_version 15.4 or 16.4 for cluster type gpu_etl"
     exit 1
 fi
 
