@@ -331,7 +331,10 @@ def test_random_forest_basic(
         est.setLabelCol(label_col)
         assert est.getLabelCol() == label_col
 
-        def assert_model(lhs: RandomForestModel, rhs: RandomForestModel) -> None:
+        def assert_model(
+            lhs: Union[RandomForestClassificationModel, RandomForestRegressionModel],
+            rhs: Union[RandomForestClassificationModel, RandomForestRegressionModel],
+        ) -> None:
             assert lhs.cuml_params == rhs.cuml_params
 
             # Vector and array(double) type will be cast to array(float) by default
@@ -342,6 +345,7 @@ def test_random_forest_basic(
             assert lhs.n_cols == data_shape[1]
 
             if isinstance(lhs, RandomForestClassificationModel):
+                assert isinstance(rhs, RandomForestClassificationModel)
                 assert lhs.numClasses == rhs.numClasses
                 assert lhs.numClasses == n_classes
 

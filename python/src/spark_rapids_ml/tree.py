@@ -138,7 +138,7 @@ class _RandomForestClass(_CumlClass):
         return {
             "n_streams": 4,
             "n_estimators": 100,
-            "max_depth": 16,
+            "max_depth": "deprecated",
             "max_features": "sqrt",  # for classification, should be 1.0 for regressor, cuml is a little broken here
             "n_bins": 128,
             "bootstrap": True,
@@ -688,7 +688,6 @@ class _RandomForestModel(
 
             import cupy as cp
             import numpy as np
-            import treelite
 
             rfs = []
             treelite_models = (
@@ -700,7 +699,7 @@ class _RandomForestModel(
                 rf.n_classes_ = num_classes
                 rf.classes_ = np.arange(num_classes, dtype=np.int32)
                 rf.n_features_in_ = n_cols
-                rf._treelite_model_bytes = treelite.Model.deserialize_bytes(model)
+                rf._treelite_model_bytes = model
 
                 rfs.append(rf)
 

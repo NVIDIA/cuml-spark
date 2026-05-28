@@ -17,7 +17,7 @@
 ARG CUDA_VERSION=12.2.2
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 
-ARG RAPIDS_VERSION=25.12
+ARG RAPIDS_VERSION=26.06
 
 # ubuntu22
 RUN sed -i -e 's|http://archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \

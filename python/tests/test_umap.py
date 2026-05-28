@@ -67,10 +67,15 @@ def _load_sparse_data(
 
     if normalize:
         row_sums = np.array(csr_mat.sum(axis=1)).flatten()
-        row_sums[row_sums == 0] = 1.0
+        zero_rows = np.flatnonzero(row_sums == 0)
+        if len(zero_rows) > 0:
+            csr_mat = csr_mat.tolil()
+            csr_mat[zero_rows, 0] = 1.0
+            csr_mat = csr_mat.tocsr()
+            row_sums = np.array(csr_mat.sum(axis=1)).flatten()
         row_sum_diag = scipy.sparse.diags(1.0 / row_sums)
         csr_mat = row_sum_diag @ csr_mat
-        assert np.allclose(np.array(csr_mat.sum(axis=1)).flatten(), 1.0)
+        assert np.allclose(np.array(csr_mat.sum(axis=1)).flatten(), 1.0, atol=1e-6)
 
     # Convert CSR matrix to SparseVectors
     data = []

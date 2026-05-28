@@ -175,7 +175,7 @@ def _get_gpu_id(task_context: TaskContext) -> int:
 # invoke the corresponding deallocate methods.  They will get cleaned up only when
 # the process exits.  This avoids a segfault in the case of creating a new
 # SAM resource with a smaller headroom.
-_old_memory_resources = []
+_old_memory_resources: List[Any] = []
 
 # keep track of last headroom to check if new sam mr is needed.
 _last_sam_headroom_size = None
