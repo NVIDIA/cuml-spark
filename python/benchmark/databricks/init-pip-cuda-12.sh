@@ -20,18 +20,25 @@ BENCHMARK_ZIP=/dbfs/path/to/benchmark.zip
 # also, in general, RAPIDS_VERSION (python) fields should omit any leading 0 in month/minor field (i.e. 23.8.0 and not 23.08.0)
 # while SPARK_RAPIDS_VERSION (jar) should have leading 0 in month/minor (e.g. 23.08.2 and not 23.8.2)
 RAPIDS_VERSION=25.12.0
-SPARK_RAPIDS_VERSION=25.12.0
+SPARK_RAPIDS_VERSION=26.04.2
 
-curl -L https://repo1.maven.org/maven2/com/nvidia/rapids-4-spark_2.12/${SPARK_RAPIDS_VERSION}/rapids-4-spark_2.12-${SPARK_RAPIDS_VERSION}-cuda12.jar -o /databricks/jars/rapids-4-spark_2.12-${SPARK_RAPIDS_VERSION}.jar
+if [[ $DATABRICKS_RUNTIME_VERSION < "17.3" ]]; then
+    SCALA_VERSION=2.12
+else
+    SCALA_VERSION=2.13
+fi
 
-# install cudatoolkit 12.2 via runfile approach
-wget https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
-sh cuda_12.2.2_535.104.05_linux.run --silent --toolkit
+curl -L https://repo1.maven.org/maven2/com/nvidia/rapids-4-spark_${SCALA_VERSION}/${SPARK_RAPIDS_VERSION}/rapids-4-spark_${SCALA_VERSION}-${SPARK_RAPIDS_VERSION}-cuda12.jar -o /databricks/jars/rapids-4-spark_${SCALA_VERSION}-${SPARK_RAPIDS_VERSION}.jar
 
+if [[ $DATABRICKS_RUNTIME_VERSION < "16.4" ]]; then
+    # install cudatoolkit 12.2 via runfile approach on DB < 16.4
+    wget https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
+    sh cuda_12.2.2_535.104.05_linux.run --silent --toolkit
 
-# reset symlink 
-rm /usr/local/cuda
-ln -s /usr/local/cuda-12.2 /usr/local/cuda
+    # reset symlink 
+    rm /usr/local/cuda
+    ln -s /usr/local/cuda-12.2 /usr/local/cuda
+fi
 
 # upgrade pip
 /databricks/python/bin/pip install --upgrade pip
