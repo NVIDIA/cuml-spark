@@ -185,7 +185,6 @@ pipeline {
                                 unstash "source_tree"
                                 common.resolveIncompatibleDriverIssue(this)
                                 sh 'bash ci/test.sh pre-merge'
-                                error('TEMPORARY: fail after regular test run to validate debug bundle upload')
                             } catch (e) {
                                 common.uploadDebugBundle(this, 'spark-rapids-ml', 'premerge')
                                 throw e
