@@ -68,7 +68,6 @@ pipeline {
         ART_CREDS = credentials("urm_creds")
         ARTIFACTORY_NAME = "${common.ARTIFACTORY_NAME}"
 
-        PVC = credentials("pvc")
         CUSTOM_WORKSPACE = "/home/jenkins/agent/workspace/${BUILD_TAG}"
     }
 
@@ -112,7 +111,6 @@ pipeline {
                     label "premerge-docker-${BUILD_TAG}"
                     cloud "${common.CLOUD_NAME}"
                     yaml pod.getDockerBuildYAML()
-                    workspaceVolume persistentVolumeClaimWorkspaceVolume(claimName: "${PVC}", readOnly: false)
                     customWorkspace "${CUSTOM_WORKSPACE}"
                 }
             }
@@ -174,7 +172,6 @@ pipeline {
                     label "premerge-ci-${BUILD_TAG}"
                     cloud "${common.CLOUD_NAME}"
                     yaml pod.getGPUYAML("${IMAGE_PREMERGE}", "${env.GPU_RESOURCE}", '8', '32Gi')
-                    workspaceVolume persistentVolumeClaimWorkspaceVolume(claimName: "${PVC}", readOnly: false)
                     customWorkspace "${CUSTOM_WORKSPACE}"
                 }
             }
@@ -184,8 +181,13 @@ pipeline {
                     githubHelper.updateCommitStatus("", "Running - tests", GitHubCommitState.PENDING)
                     container('gpu') {
                         timeout(time: 2, unit: 'HOURS') { // step only timeout for test run
-                            common.resolveIncompatibleDriverIssue(this)
-                            sh 'bash ci/test.sh pre-merge'
+                            try {
+                                common.resolveIncompatibleDriverIssue(this)
+                                sh 'bash ci/test.sh pre-merge'
+                            } catch (e) {
+                                common.uploadDebugBundle(this, 'spark-rapids-ml', 'premerge')
+                                throw e
+                            }
                         }
                     }
                 }
