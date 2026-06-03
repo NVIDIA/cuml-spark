@@ -22,6 +22,7 @@ set -ex
 # Note that the SPARK_RAPIDS_VERSION will not necessarily match the RAPIDS_VERSION. Check https://nvidia.github.io/spark-rapids/docs/download.html for the latest compatible version of 
 # spark-rapids version that verifies compatibility with your Databricks Runtime. (In this case, Databricks 17.3 ML LTS.) The available versions for RAPIDS_VERSION can be
 # found by executing "pip index versions spark-rapids-ml".   
+# TODO change RAPIDS_VERSION to 26.6.0 after rapids 26.06 is released
 RAPIDS_VERSION=25.12.0
 SPARK_RAPIDS_VERSION=26.04.2
 

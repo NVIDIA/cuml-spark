@@ -48,5 +48,6 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 
 # install cuML
 ARG RAPIDS_VERSION=26.06
+# TODO change to rapidsai after rapids 26.06 is released
 RUN conda install -y -c rapidsai-nightly -c conda-forge -c nvidia cuml=$RAPIDS_VERSION cuvs=$RAPIDS_VERSION python=3.11 pylibraft=$RAPIDS_VERSION raft-dask=$RAPIDS_VERSION cuda-version=12.2 numpy~=1.0 \
     && conda clean --all -f -y
