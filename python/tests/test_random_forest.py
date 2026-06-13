@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -331,7 +331,10 @@ def test_random_forest_basic(
         est.setLabelCol(label_col)
         assert est.getLabelCol() == label_col
 
-        def assert_model(lhs: RandomForestModel, rhs: RandomForestModel) -> None:
+        def assert_model(
+            lhs: Union[RandomForestClassificationModel, RandomForestRegressionModel],
+            rhs: Union[RandomForestClassificationModel, RandomForestRegressionModel],
+        ) -> None:
             assert lhs.cuml_params == rhs.cuml_params
 
             # Vector and array(double) type will be cast to array(float) by default
@@ -342,6 +345,7 @@ def test_random_forest_basic(
             assert lhs.n_cols == data_shape[1]
 
             if isinstance(lhs, RandomForestClassificationModel):
+                assert isinstance(rhs, RandomForestClassificationModel)
                 assert lhs.numClasses == rhs.numClasses
                 assert lhs.numClasses == n_classes
 

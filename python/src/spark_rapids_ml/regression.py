@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -191,7 +191,6 @@ class LinearRegressionClass(_CumlClass):
             "maxIter": "max_iter",
             "regParam": "alpha",
             "solver": "solver",
-            "standardization": "normalize",  # TODO: standardization is carried out in cupy not cuml so need a new type of param mapped value to indicate that.
             "tol": "tol",
             "weightCol": None,
         }
@@ -219,7 +218,6 @@ class LinearRegressionClass(_CumlClass):
             "algorithm": "auto",
             "fit_intercept": True,
             "copy_X": True,
-            "normalize": False,
             "verbose": False,
             "alpha": 0.0001,
             "solver": "auto",  # in cuml 25.04 default was changed to auto which is mapped to eig internally in cuml
@@ -789,6 +787,7 @@ class LinearRegressionModel(
 
         def _construct_lr() -> CumlT:
             from cuml.linear_model.linear_regression_mg import LinearRegressionMG
+            from pylibraft.common import Handle
 
             from .utils import cudf_to_cuml_array
 
@@ -798,7 +797,9 @@ class LinearRegressionModel(
             intercepts = intercept_ if isinstance(intercept_, list) else [intercept_]
 
             for i in range(len(coefs)):
-                lr = LinearRegressionMG(output_type="numpy", copy_X=False)
+                lr = LinearRegressionMG(
+                    handle=Handle(), output_type="numpy", copy_X=False
+                )
                 # need this to revert a change in cuML targeting sklearn compat.
                 lr.n_features_in_ = n_cols
                 lr.n_cols = n_cols

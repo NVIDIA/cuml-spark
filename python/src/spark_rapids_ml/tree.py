@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -138,7 +138,7 @@ class _RandomForestClass(_CumlClass):
         return {
             "n_streams": 4,
             "n_estimators": 100,
-            "max_depth": 16,
+            "max_depth": "deprecated",
             "max_features": "sqrt",  # for classification, should be 1.0 for regressor, cuml is a little broken here
             "n_bins": 128,
             "bootstrap": True,
@@ -678,6 +678,7 @@ class _RandomForestModel(
         is_classification = self._is_classification()
         dtype = self.dtype
         num_classes = self._num_classes
+        n_cols = self.n_cols
 
         def _construct_rf() -> CumlT:
             if is_classification:
@@ -687,7 +688,6 @@ class _RandomForestModel(
 
             import cupy as cp
             import numpy as np
-            import treelite
 
             rfs = []
             treelite_models = (
@@ -698,7 +698,8 @@ class _RandomForestModel(
                 rf = cuRf()
                 rf.n_classes_ = num_classes
                 rf.classes_ = np.arange(num_classes, dtype=np.int32)
-                rf._treelite_model_bytes = treelite.Model.deserialize_bytes(model)
+                rf.n_features_in_ = n_cols
+                rf._treelite_model_bytes = model
 
                 rfs.append(rf)
 

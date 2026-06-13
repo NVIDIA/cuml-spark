@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ def test_params(default_params: bool) -> None:
 
     cuml_params = get_default_cuml_parameters(
         cuml_classes=[CumlLinearRegression, Ridge, CD],
-        excludes=["handle", "output_type"],
+        excludes=["handle", "output_type", "normalize"],
     )
 
     # Ensure internal cuml defaults match actual cuml defaults
@@ -126,7 +126,6 @@ def test_params(default_params: bool) -> None:
         "alpha": spark_params["regParam"],
         "l1_ratio": spark_params["elasticNetParam"],
         "max_iter": spark_params["maxIter"],
-        "normalize": spark_params["standardization"],
         "tol": spark_params["tol"],
     }
 
@@ -175,7 +174,6 @@ def test_linear_regression_params(
         "fit_intercept": True,
         "l1_ratio": 0.0,
         "max_iter": 100,
-        "normalize": True,
         "solver": "auto",
     }
     default_lr = LinearRegression()
@@ -196,7 +194,6 @@ def test_linear_regression_params(
         {
             "alpha": reg,
             "fit_intercept": False,
-            "normalize": False,
             "solver": "eig",
         }
     )
@@ -234,7 +231,6 @@ def test_linear_regression_copy() -> None:
         ({"regParam": 0.12}, {"alpha": 0.12}),
         ({"elasticNetParam": 0.23}, {"l1_ratio": 0.23}),
         ({"fitIntercept": False}, {"fit_intercept": False}),
-        ({"standardization": False}, {"normalize": False}),
         ({"tol": 0.0132}, {"tol": 0.0132}),
         ({"verbose": True}, {"verbose": True}),
     ]

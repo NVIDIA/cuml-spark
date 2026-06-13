@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024, NVIDIA CORPORATION.
+# Copyright (c) 2024-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ def test_multi_class_metrics(
     ).astype(np.float64)
 
     probabilities = np.random.rand(1000, num_classes)
-    probabilities[range(1000), list(pdf["label"].astype(np.integer))] = 2.0
+    probabilities[range(1000), list(pdf["label"].astype(int))] = 2.0
     probabilities = probabilities / np.sum(probabilities, axis=1).reshape(-1, 1)
 
     pdf["probabilities"] = list(probabilities)
