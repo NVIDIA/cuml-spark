@@ -47,3 +47,11 @@ pip install -r requirements_dev.txt && pip install -e .
 # plugin tests
 ./run_plugin_test.sh
 
+# push draft release docs to gh-pages in nightly run
+if [[ $type == "nightly" ]]; then
+    # if everything passed till now update draft release docs in gh-pages
+    # need to invoke docs.sh from top level of repo
+    cd .. # top level of repo
+    ci/docs.sh nightly
+fi
+

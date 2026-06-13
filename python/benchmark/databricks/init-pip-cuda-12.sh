@@ -19,8 +19,7 @@ BENCHMARK_ZIP=/dbfs/path/to/benchmark.zip
 # IMPORTANT: specify rapids fully 23.10.0 and not 23.10
 # also, in general, RAPIDS_VERSION (python) fields should omit any leading 0 in month/minor field (i.e. 23.8.0 and not 23.08.0)
 # while SPARK_RAPIDS_VERSION (jar) should have leading 0 in month/minor (e.g. 23.08.2 and not 23.8.2)
-# TODO change RAPIDS_VERSION to 26.6.0 after rapids 26.06 is released
-RAPIDS_VERSION=25.12.0
+RAPIDS_VERSION=26.6.0
 SPARK_RAPIDS_VERSION=26.04.2
 
 if [[ $DATABRICKS_RUNTIME_VERSION < "17.3" ]]; then

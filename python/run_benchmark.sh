@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -163,7 +163,7 @@ fi
 spark_rapids_confs=""
 if [[ $cluster_type == "gpu_etl" ]]
 then
-SPARK_RAPIDS_VERSION=25.12.0
+SPARK_RAPIDS_VERSION=26.04.2
 rapids_jar=${rapids_jar:-rapids-4-spark_2.12-$SPARK_RAPIDS_VERSION.jar}
 if [ ! -f $rapids_jar ]; then
     echo "downloading spark rapids jar"
