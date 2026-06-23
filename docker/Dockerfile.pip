@@ -14,10 +14,11 @@
 # limitations under the License.
 #
 
-ARG CUDA_VERSION=12.2.2
-FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
+# for simplicity, use oldest ubuntu with python > 3.10, and corresponding available cuda version
+ARG CUDA_VERSION=12.6.0
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04
 
-ARG PYSPARK_VERSION=3.3.1
+ARG PYSPARK_VERSION=3.4.4
 ARG RAPIDS_VERSION=26.06.0
 ARG ARCH=amd64
 #ARG ARCH=arm64
@@ -36,12 +37,19 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists
 
 RUN apt-get update -y \
-    && apt install -y git numactl python3.10-venv python3-pip python-is-python3 software-properties-common wget zip \
-    && python -m pip install --upgrade pip \
-    && rm -rf /var/lib/apt/lists
+    && apt install -y git numactl python3.12-venv python3-pip python-is-python3 software-properties-common wget zip
+
+# 1. Define the venv path and update system PATH
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# 2. Create the virtual environment
+RUN python3 -m venv $VIRTUAL_ENV 
+
+RUN python -m pip install --upgrade pip
 
 RUN apt-get update -y \
-    && apt install -y python3.10-dev cmake curl \
+    && apt install -y cmake curl \
     && rm -rf /var/lib/apt/lists
 
 # install RAPIDS
@@ -55,13 +63,9 @@ RUN pip install --no-cache-dir \
     numpy~=1.0 \
     --extra-index-url=https://pypi.nvidia.com
 
-# install python dependencies
-RUN pip install --no-cache-dir pyspark==${PYSPARK_VERSION} "scikit-learn>=1.2.1" \
-    && pip install --no-cache-dir "black>=23.1.0" "build>=0.10.0" "isort>=5.12.0" "mypy>=1.0.0" \
-    numpydoc pydata-sphinx-theme pylint pytest "sphinx<6.0" "twine>=4.0.0"
 
 # Config JAVA_HOME
-ENV JAVA_HOME /usr/lib/jvm/java-1.17.0-openjdk-$ARCH
+ENV JAVA_HOME=/usr/lib/jvm/java-1.17.0-openjdk-$ARCH
 
 ### END OF CACHE ###
 

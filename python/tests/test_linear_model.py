@@ -21,12 +21,7 @@ import pyspark
 import pytest
 from _pytest.logging import LogCaptureFixture
 from packaging import version
-
-if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-    from pyspark.sql.utils import IllegalArgumentException  # type: ignore
-else:
-    from pyspark.errors import IllegalArgumentException  # type: ignore
-
+from pyspark.errors import IllegalArgumentException  # type: ignore
 from pyspark.ml import Model
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import VectorAssembler

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2024-2025, NVIDIA CORPORATION.
+# Copyright (c) 2024-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ cat <<EOF
 {
     "num_workers": $num_gpus,
     "cluster_name": "$cluster_name",
-    "spark_version": "${db_version}.x-gpu-ml-scala2.12",
+    "spark_version": "${db_version}.x-gpu-ml-scala${SCALA_VERSION}",
     "spark_conf": {
         "spark.task.resource.gpu.amount": "0.25",
         "spark.task.cpus": "1",

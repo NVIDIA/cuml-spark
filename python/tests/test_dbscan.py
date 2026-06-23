@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,12 +21,7 @@ import pyspark
 import pytest
 from _pytest.logging import LogCaptureFixture
 from packaging import version
-
-if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-    from pyspark.sql.utils import IllegalArgumentException  # type: ignore
-else:
-    from pyspark.errors import IllegalArgumentException  # type: ignore
-
+from pyspark.errors import IllegalArgumentException  # type: ignore
 from pyspark.ml.functions import array_to_vector
 from pyspark.ml.linalg import DenseVector, Vectors
 from pyspark.sql.dataframe import DataFrame

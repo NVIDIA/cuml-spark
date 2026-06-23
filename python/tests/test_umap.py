@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025-2026, NVIDIA CORPORATION.
+# Copyright (c) 2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -442,23 +442,12 @@ def test_umap_model_persistence(
     import os
     import re
 
-    import pyspark
-    from packaging import version
-
     with CleanSparkSession() as spark:
 
         n_rows = 5000
         n_cols = 200
 
         if sparse_fit:
-            if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-                import logging
-
-                err_msg = "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function for SparseVector. "
-                "The test case will be skipped. Please install pyspark>=3.4."
-                logging.info(err_msg)
-                return
-
             sparse_vec_data, input_raw_data = _load_sparse_data(n_rows, n_cols, 30)
             df = spark.createDataFrame(sparse_vec_data, ["features"])
         else:
@@ -547,17 +536,6 @@ def test_umap_chunking(
         )
 
         if sparse_fit:
-            import pyspark
-            from packaging import version
-
-            if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-                import logging
-
-                err_msg = "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function for SparseVector. "
-                "The test case will be skipped. Please install pyspark>=3.4."
-                logging.info(err_msg)
-                return
-
             sparse_vec_data, input_raw_data = _load_sparse_data(n_rows, n_cols, 30)
             df = spark.createDataFrame(sparse_vec_data, ["features"])
             nbytes = input_raw_data.data.nbytes
@@ -742,17 +720,7 @@ def test_umap_build_algo(gpu_number: int, metric: str) -> None:
 def test_umap_sparse_vector(
     n_rows: int, n_cols: int, nnz: int, metric: str, gpu_number: int, tmp_path: str
 ) -> None:
-    import pyspark
     from cuml.manifold import UMAP as cumlUMAP
-    from packaging import version
-
-    if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-        import logging
-
-        err_msg = "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function for SparseVector. "
-        "The test case will be skipped. Please install pyspark>=3.4."
-        logging.info(err_msg)
-        return
 
     # Hellinger measures similarity between probability distributions; normalize to prevent distances from collapsing to zero
     normalize = metric == "hellinger"

@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025, NVIDIA CORPORATION.
+# Copyright (c) 2024-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,18 +19,12 @@ import cuml
 import cupyx.scipy.sparse
 import numpy as np
 import pandas as pd
-import pyspark
 import pytest
 from _pytest.logging import LogCaptureFixture
 from gen_data_distributed import SparseRegressionDataGen
 from packaging import version
 from py4j.protocol import Py4JJavaError
-
-if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-    from pyspark.sql.utils import IllegalArgumentException  # type: ignore
-else:
-    from pyspark.errors import IllegalArgumentException  # type: ignore
-
+from pyspark.errors import IllegalArgumentException  # type: ignore
 from pyspark.ml.classification import LogisticRegression as SparkLogisticRegression
 from pyspark.ml.classification import (
     LogisticRegressionModel as SparkLogisticRegressionModel,
@@ -1247,14 +1241,6 @@ def test_crossvalidator_logistic_regression(
     if convert_to_sparse:
         assert feature_type == feature_types.vector
 
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            import logging
-
-            err_msg = "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function. "
-            "The test case will be skipped. Please install pyspark>=3.4."
-            logging.info(err_msg)
-        return
-
     # Train a toy model
 
     n_classes = 2 if metric_name == "areaUnderROC" else 10
@@ -1625,13 +1611,6 @@ def test_compat_sparse_binomial(
         assert gpu_lr.hasParam("enable_sparse_data_optim") is True
         assert gpu_lr.getOrDefault("enable_sparse_data_optim") == None
 
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            err_msg = "Cannot import pyspark `unwrap_udt` function. Please install pyspark>=3.4 "
-            "or run on Databricks Runtime."
-            with pytest.raises(RuntimeError, match=err_msg):
-                gpu_lr.fit(bdf)
-            return
-
         check_sparse_estimator_preprocess(gpu_lr, bdf, dimension=3)
 
         gpu_model = gpu_lr.fit(bdf)
@@ -1677,13 +1656,6 @@ def test_compat_sparse_multinomial(
         assert gpu_lr.hasParam("enable_sparse_data_optim") is True
         assert gpu_lr.getOrDefault("enable_sparse_data_optim") == None
 
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            err_msg = "Cannot import pyspark `unwrap_udt` function. Please install pyspark>=3.4 "
-            "or run on Databricks Runtime."
-            with pytest.raises(RuntimeError, match=err_msg):
-                gpu_lr.fit(mdf)
-            return
-
         gpu_model = gpu_lr.fit(mdf)
 
         cpu_lr = SparkLogisticRegression(**params)
@@ -1705,16 +1677,6 @@ def test_sparse_nlp20news(
     standardization: bool,
     caplog: LogCaptureFixture,
 ) -> None:
-    if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-        import logging
-
-        err_msg = (
-            "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function. "
-        )
-        "The test case will be skipped. Please install pyspark>=3.4."
-        logging.info(err_msg)
-        return
-
     tolerance = 0.001
     reg_param = 1e-2
 
@@ -1813,16 +1775,6 @@ def test_quick_sparse(
     gpu_number: int,
     float32_inputs: bool = True,
 ) -> None:
-    if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-        import logging
-
-        err_msg = (
-            "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function. "
-        )
-        "The test case will be skipped. Please install pyspark>=3.4."
-        logging.info(err_msg)
-        return
-
     convert_to_sparse = True
     tolerance = 0.005
     reg_param = reg_factors[0]
@@ -2068,16 +2020,6 @@ def test_standardization_sparse_example(
     float32_inputs: bool = False,
 ) -> None:
     _convert_index = "int32" if random.choice([True, False]) is True else "int64"
-
-    if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-        import logging
-
-        err_msg = (
-            "pyspark < 3.4 is detected. Cannot import pyspark `unwrap_udt` function. "
-        )
-        "The test case will be skipped. Please install pyspark>=3.4."
-        logging.info(err_msg)
-        return
 
     tolerance = 0.001
     # Compare accuracy and probability only when regularizaiton is disabled.
@@ -2347,9 +2289,6 @@ def test_sparse_all_zeroes(
             "labelCol": "label",
         }
 
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            return
-
         gpu_lr = LogisticRegression(enable_sparse_data_optim=True, **params)
         gpu_model = gpu_lr.fit(bdf)
         check_sparse_model_preprocess(gpu_model, bdf)
@@ -2389,9 +2328,6 @@ def test_sparse_one_gpu_all_zeroes(
             "featuresCol": "features",
             "labelCol": "label",
         }
-
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            return
 
         gpu_lr = LogisticRegression(
             enable_sparse_data_optim=True, verbose=True, **params

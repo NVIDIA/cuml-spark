@@ -23,7 +23,7 @@ set -ex
 # spark-rapids version that verifies compatibility with your Databricks Runtime. (In this case, Databricks 17.3 ML LTS.) The available versions for RAPIDS_VERSION can be
 # found by executing "pip index versions spark-rapids-ml".   
 RAPIDS_VERSION=26.6.0
-SPARK_RAPIDS_VERSION=26.04.2
+SPARK_RAPIDS_VERSION=26.06.0
 
 curl -L https://repo1.maven.org/maven2/com/nvidia/rapids-4-spark_2.13/${SPARK_RAPIDS_VERSION}/rapids-4-spark_2.13-${SPARK_RAPIDS_VERSION}-cuda12.jar -o /databricks/jars/rapids-4-spark_2.13-${SPARK_RAPIDS_VERSION}.jar
 

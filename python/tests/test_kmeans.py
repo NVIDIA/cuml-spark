@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,16 +17,9 @@
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
 import numpy as np
-import pyspark
 import pytest
 from _pytest.logging import LogCaptureFixture
-from packaging import version
-
-if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-    from pyspark.sql.utils import IllegalArgumentException  # type: ignore
-else:
-    from pyspark.errors import IllegalArgumentException  # type: ignore
-
+from pyspark.errors import IllegalArgumentException  # type: ignore
 from pyspark.ml.clustering import KMeans as SparkKMeans
 from pyspark.ml.clustering import KMeansModel as SparkKMeansModel
 from pyspark.ml.functions import array_to_vector
@@ -443,13 +436,7 @@ def test_kmeans_spark_compat(
         ]
         df = spark.createDataFrame(data, ["features", "weighCol"])
 
-        import pyspark
-        from packaging import version
-
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            kmeans = _KMeans(k=2)
-        else:
-            kmeans = _KMeans(k=2, solver="auto", maxBlockSizeInMB=0)  # type: ignore # only spark >= 3.4 supports solver and maxblockSize
+        kmeans = _KMeans(k=2, solver="auto", maxBlockSizeInMB=0)  # type: ignore # only spark >= 3.4 supports solver and maxblockSize
 
         kmeans.setSeed(1)
         kmeans.setMaxIter(10)

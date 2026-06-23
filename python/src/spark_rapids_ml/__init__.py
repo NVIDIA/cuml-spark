@@ -17,12 +17,3 @@ __version__ = "26.6.0"
 
 import pandas as pd
 import pyspark
-
-# patch pandas 2.0+ for backward compatibility with psypark < 3.4
-from packaging import version
-
-if version.parse(pyspark.__version__) < version.parse("3.4.0") and version.parse(
-    pd.__version__
-) >= version.parse("2.0.0"):
-    pd.DataFrame.iteritems = pd.DataFrame.items
-    pd.Series.iteritems = pd.Series.items

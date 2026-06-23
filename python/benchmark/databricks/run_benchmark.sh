@@ -16,7 +16,7 @@
 
 cluster_type=${1:-gpu_etl}
 db_version=${2:-15.4}
-SPARK_RAPIDS_VERSION=26.04.2
+SPARK_RAPIDS_VERSION=26.06.0
 SCALA_VERSION=2.12
 
 if [[ $cluster_type == "gpu" || $cluster_type == "gpu_etl" ]]; then

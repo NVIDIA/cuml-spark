@@ -20,7 +20,7 @@ BENCHMARK_ZIP=/dbfs/path/to/benchmark.zip
 # also, in general, RAPIDS_VERSION (python) fields should omit any leading 0 in month/minor field (i.e. 23.8.0 and not 23.08.0)
 # while SPARK_RAPIDS_VERSION (jar) should have leading 0 in month/minor (e.g. 23.08.2 and not 23.8.2)
 RAPIDS_VERSION=26.6.0
-SPARK_RAPIDS_VERSION=26.04.2
+SPARK_RAPIDS_VERSION=26.06.0
 
 if [[ $DATABRICKS_RUNTIME_VERSION < "17.3" ]]; then
     SCALA_VERSION=2.12
