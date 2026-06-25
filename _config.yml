@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023, NVIDIA CORPORATION.
+# Copyright (c) 2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ title: Spark Rapids ML
 description: >- # this means to ignore newlines until "baseurl:"
   Spark Rapids ML enables GPU accelerated distributed machine learning on Apache Spark
   powered by the RAPIDS cuML library.
-baseurl: "/spark-rapids-ml" # the subpath of your site, e.g. /blog
+baseurl: "/cuml-spark" # the subpath of your site, e.g. /blog
 url: "nvidia.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 aux_links:
   "Spark Rapids ML on GitHub":
-    - "//github.com/nvidia/spark-rapids-ml"
+    - "//github.com/nvidia/cuml-spark"
 
 # Build settings
 remote_theme: pmarsceill/just-the-docs
