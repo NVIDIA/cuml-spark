@@ -41,7 +41,7 @@ This directory contains shell scripts for running larger scale benchmarks on Dat
 
 2. The benchmarks can be run as
     ```bash
-    ./run_benchmark.sh [cpu|gpu|gpu_etl] [[12.2|13.3|14.3]] >> benchmark_log
+    ./run_benchmark.sh [cpu|gpu|gpu_etl] [[15.4|16.4|17.3]] >> benchmark_log
     ```
 
     The script creates a cpu or gpu cluster, respectively using the cluster specs in [cpu_cluster_spec](./cpu_cluster_spec.sh), [gpu_cluster_spec](./gpu_cluster_spec.sh), [gpu_etl_cluster_spec](./gpu_etl_cluster_spec.sh), depending on the supplied argument.  In gpu and gpu_etl mode each algorithm benchmark is run 3 times, and similarly in cpu mode, except for kmeans and random forest classifier and regressor which are each run 1 time due to their long running times.  gpu_etl mode also uses the [spark-rapids](https://github.com/NVIDIA/spark-rapids) gpu accelerated plugin.

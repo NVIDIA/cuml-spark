@@ -31,7 +31,7 @@ The following table shows the currently supported algorithms.  The goal is to ex
 
 | Spark Rapids ML | CUDA  | Spark  | Python |
 | :-------------- | :---- | :----- | :----- |
-| 26.0.6          | 12.2+ | 3.4+   | 3.11+  |
+| 26.6.0          | 12.2+ | 3.4+   | 3.11+  |
 
 
 ## Single vs Double precision inputs

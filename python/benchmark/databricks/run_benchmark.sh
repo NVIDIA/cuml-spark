@@ -15,7 +15,7 @@
 
 
 cluster_type=${1:-gpu_etl}
-db_version=${2:-15.4}
+db_version=${2:-17.3}
 SPARK_RAPIDS_VERSION=26.06.0
 SCALA_VERSION=2.12
 

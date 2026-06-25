@@ -14,9 +14,8 @@
 # limitations under the License.
 #
 
-# for simplicity, use oldest ubuntu with python > 3.10, and corresponding available cuda version
-ARG CUDA_VERSION=12.6.0
-FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04
+ARG CUDA_VERSION=12.2.2
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 
 ARG PYSPARK_VERSION=3.4.4
 ARG RAPIDS_VERSION=26.06.0
@@ -36,15 +35,22 @@ RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -y openjdk-17-jdk \
     && rm -rf /var/lib/apt/lists
 
+# some of the below needed for python, installed from source below, to have full functionality
 RUN apt-get update -y \
-    && apt install -y git numactl python3.12-venv python3-pip python-is-python3 software-properties-common wget zip
+    && apt install -y git numactl software-properties-common wget zip build-essential zlib1g-dev \
+    libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev libbz2-dev
+
+# install python 3.11 as base image has python 3.10
+RUN bash -c "wget https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz && \
+    tar xzf Python-3.11.9.tgz && cd Python-3.11.9 && \
+    ./configure --enable-optimizations && make altinstall"
 
 # 1. Define the venv path and update system PATH
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # 2. Create the virtual environment
-RUN python3 -m venv $VIRTUAL_ENV 
+RUN python3.11 -m venv $VIRTUAL_ENV 
 
 RUN python -m pip install --upgrade pip
 
