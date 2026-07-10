@@ -27,7 +27,7 @@ on:
 
 jobs:
   Benchmark:
-    if: github.repository == 'NVIDIA/spark-rapids-ml'
+    if: github.repository == 'NVIDIA/cuml-spark'
     runs-on: ubuntu-latest
     env:
       PROJECT: rapids-spark
