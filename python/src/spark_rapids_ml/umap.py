@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ from typing import (
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import numpy as np
@@ -134,6 +135,8 @@ class UMAPClass(_CumlClass):
             "verbose": False,
             "build_algo": "auto",
             "build_kwds": None,
+            "device_ids": None,
+            "force_serial_epochs": None,
         }
 
     def _pyspark_class(self) -> Optional[ABCMeta]:
@@ -1700,9 +1703,9 @@ class _CumlModelReaderParquet(_CumlModelReader):
 
         def read_dense_array(df_path: str) -> np.ndarray:
             data_df = spark.read.parquet(df_path).orderBy("row_id")
-            pdf = data_df.toPandas()
+            pdf = cast(PandasDataFrame, data_df.toPandas())
             assert type(pdf) == pd.DataFrame
-            return np.array(list(pdf.data), dtype=np.float32)
+            return np.array(list(pdf["data"]), dtype=np.float32)
 
         metadata = DefaultParamsReader.loadMetadata(path, self.sc)
         data_path = os.path.join(path, "data")

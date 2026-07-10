@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -163,7 +163,7 @@ fi
 spark_rapids_confs=""
 if [[ $cluster_type == "gpu_etl" ]]
 then
-SPARK_RAPIDS_VERSION=25.12.0
+SPARK_RAPIDS_VERSION=26.06.0
 rapids_jar=${rapids_jar:-rapids-4-spark_2.12-$SPARK_RAPIDS_VERSION.jar}
 if [ ! -f $rapids_jar ]; then
     echo "downloading spark rapids jar"
@@ -561,48 +561,43 @@ if [[ "${MODE}" =~ "logistic_regression" ]] || [[ "${MODE}" == "all" ]]; then
     done
     
     # Logistic Regression with sparse vector dataset
-    PYSPARK_4_below=$(python -c "import pyspark; from packaging import version; cmp = version.parse(pyspark.__version__) < version.parse('3.4.0'); print(cmp);")
-    if [ $PYSPARK_4_below = "True" ]; then
-        echo "Skip benchmarking logistic regression on sparse vectors. Spark 3.4 and above is required."
-    else
-        for num_classes in ${num_classes_list}; do
-            data_path=${gen_data_root}/sparse_logistic_regression/r${num_rows}_c${num_sparse_cols}_float64_ncls${num_classes}.parquet
+    for num_classes in ${num_classes_list}; do
+        data_path=${gen_data_root}/sparse_logistic_regression/r${num_rows}_c${num_sparse_cols}_float64_ncls${num_classes}.parquet
 
-            if [[ $gen_data == "true" && ! -d ${data_path} ]]; then
-                python $gen_data_script sparse_regression \
-                --n_informative $(( num_cols / 3 ))  \
-                --num_rows $num_rows \
-                --num_cols $num_sparse_cols \
-                --output_num_files $output_num_files \
-                --dtype "float64" \
-                --feature_type "vector" \
-                --output_dir ${data_path} \
-                --density $density \
-                --logistic_regression "True" \
-                --n_classes ${num_classes} \
-                --use_gpu ${use_gpu} \
-                $common_confs
-            fi
+        if [[ $gen_data == "true" && ! -d ${data_path} ]]; then
+            python $gen_data_script sparse_regression \
+            --n_informative $(( num_cols / 3 ))  \
+            --num_rows $num_rows \
+            --num_cols $num_sparse_cols \
+            --output_num_files $output_num_files \
+            --dtype "float64" \
+            --feature_type "vector" \
+            --output_dir ${data_path} \
+            --density $density \
+            --logistic_regression "True" \
+            --n_classes ${num_classes} \
+            --use_gpu ${use_gpu} \
+            $common_confs
+        fi
 
-            family="Binomial"
-                
-            echo "$sep algo: sparse ${family} logistic regression - elasticnet regularization $sep"
-            python ./benchmark/benchmark_runner.py logistic_regression \
-                --standardization False \
-                --maxIter 200 \
-                --tol 1e-30 \
-                --regParam 0.00001 \
-                --elasticNetParam 0.2 \
-                --num_gpus $num_gpus \
-                --num_cpus $num_cpus \
-                --num_runs $num_runs \
-                --train_path ${data_path} \
-                --transform_path ${data_path} \
-                --report_path "report_sparse_logistic_regression_${cluster_type}.csv" \
-                $common_confs $spark_rapids_confs \
-                "${EXTRA_ARGS[@]}"
-        done
-    fi
+        family="Binomial"
+            
+        echo "$sep algo: sparse ${family} logistic regression - elasticnet regularization $sep"
+        python ./benchmark/benchmark_runner.py logistic_regression \
+            --standardization False \
+            --maxIter 200 \
+            --tol 1e-30 \
+            --regParam 0.00001 \
+            --elasticNetParam 0.2 \
+            --num_gpus $num_gpus \
+            --num_cpus $num_cpus \
+            --num_runs $num_runs \
+            --train_path ${data_path} \
+            --transform_path ${data_path} \
+            --report_path "report_sparse_logistic_regression_${cluster_type}.csv" \
+            $common_confs $spark_rapids_confs \
+            "${EXTRA_ARGS[@]}"
+    done
 fi
 
 # UMAP

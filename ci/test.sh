@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2025, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,15 +47,11 @@ pip install -r requirements_dev.txt && pip install -e .
 # plugin tests
 ./run_plugin_test.sh
 
-# check compatibility with Spark 3.3 in nightly run
-# also push draft release docs to gh-pages
+# push draft release docs to gh-pages in nightly run
 if [[ $type == "nightly" ]]; then
-    pip uninstall pyspark -y
-    pip install pyspark~=3.3.0
-    ./run_test.sh
-    ./run_benchmark.sh $bench_args
     # if everything passed till now update draft release docs in gh-pages
     # need to invoke docs.sh from top level of repo
     cd .. # top level of repo
     ci/docs.sh nightly
 fi
+

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 ARG CUDA_VERSION=12.2.2
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 
-ARG RAPIDS_VERSION=25.12
+ARG RAPIDS_VERSION=26.06
 
 # ubuntu22
 RUN sed -i -e 's|http://archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
@@ -34,28 +34,24 @@ RUN apt update -y \
     && rm -rf /var/lib/apt/lists
 
 # Config JAVA_HOME
-ENV JAVA_HOME /usr/lib/jvm/java-1.17.0-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-1.17.0-openjdk-amd64
 
 # Install conda
 ENV PATH="/root/miniconda3/bin:${PATH}"
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-Linux-x86_64.sh \
+ENV CONDA_PLUGINS_AUTO_ACCEPT_TOS="yes"
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
     && mkdir /root/.conda \
-    && bash Miniconda3-py38_4.10.3-Linux-x86_64.sh -b \
-    && rm -f Miniconda3-py38_4.10.3-Linux-x86_64.sh \
-    && conda tos accept --override-channels -c conda-forge -c defaults \
-    && conda init
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh \
+    && conda init && conda update -n base conda \
+    && conda install -n base conda-libmamba-solver \
+    && conda config --set solver libmamba
 
 # install cuML
 
-RUN conda install -y -c rapidsai -c conda-forge -c nvidia python=3.10 cuda-version=12.2 cuml=$RAPIDS_VERSION cudf=$RAPIDS_VERSION cuvs=$RAPIDS_VERSION pylibraft=$RAPIDS_VERSION raft-dask=$RAPIDS_VERSION numpy~=1.0 \
+RUN conda install -y -c rapidsai -c conda-forge -c nvidia python=3.11 cuda-version=12.2 cuml=$RAPIDS_VERSION cudf=$RAPIDS_VERSION cuvs=$RAPIDS_VERSION pylibraft=$RAPIDS_VERSION raft-dask=$RAPIDS_VERSION numpy~=1.0 \
     && conda clean --all -f -y
 
-# install python dependencies
-RUN pip install --no-cache-dir "pyspark>=3.2.1" "scikit-learn>=1.2.1" \
-    && pip install --no-cache-dir "black>=23.1.0" "build>=0.10.0" "isort>=5.12.0" "mypy>=1.0.0" \
-    numpydoc pydata-sphinx-theme pylint pytest "sphinx<6.0" "twine>=4.0.0"
-
-### END OF CACHE ###
 
 #ARG RAPIDS_ML_VER=main
 #RUN git clone -b branch-$RAPIDS_ML_VER https://github.com/NVIDIA/spark-rapids-ml.git

@@ -638,12 +638,6 @@ class _CumlCaller(_CumlParams, _CumlCommon):
         """Check if stage-level scheduling is not needed,
         return true to skip stage-level scheduling"""
 
-        if spark_version < "3.4.0":
-            self.logger.info(
-                "Stage-level scheduling in spark-rapids-ml requires spark version 3.4.0+"
-            )
-            return True
-
         if "3.4.0" <= spark_version < "3.5.1" and not _is_standalone_or_localcluster(
             conf
         ):

@@ -100,10 +100,6 @@ class KMeansClass(_CumlClass):
         import pyspark
         from packaging import version
 
-        if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-            param_map.pop("solver")
-            param_map.pop("maxBlockSizeInMB")
-
         return param_map
 
     @classmethod

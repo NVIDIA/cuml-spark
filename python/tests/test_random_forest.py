@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,17 +18,10 @@ import math
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, cast
 
 import numpy as np
-import pyspark
 import pytest
 from _pytest.logging import LogCaptureFixture
 from cuml import accuracy_score
-from packaging import version
-
-if version.parse(pyspark.__version__) < version.parse("3.4.0"):
-    from pyspark.sql.utils import IllegalArgumentException  # type: ignore
-else:
-    from pyspark.errors import IllegalArgumentException  # type: ignore
-
+from pyspark.errors import IllegalArgumentException  # type: ignore
 from pyspark.ml.classification import (
     RandomForestClassificationModel as SparkRFClassificationModel,
 )
@@ -331,7 +324,10 @@ def test_random_forest_basic(
         est.setLabelCol(label_col)
         assert est.getLabelCol() == label_col
 
-        def assert_model(lhs: RandomForestModel, rhs: RandomForestModel) -> None:
+        def assert_model(
+            lhs: Union[RandomForestClassificationModel, RandomForestRegressionModel],
+            rhs: Union[RandomForestClassificationModel, RandomForestRegressionModel],
+        ) -> None:
             assert lhs.cuml_params == rhs.cuml_params
 
             # Vector and array(double) type will be cast to array(float) by default
@@ -342,6 +338,7 @@ def test_random_forest_basic(
             assert lhs.n_cols == data_shape[1]
 
             if isinstance(lhs, RandomForestClassificationModel):
+                assert isinstance(rhs, RandomForestClassificationModel)
                 assert lhs.numClasses == rhs.numClasses
                 assert lhs.numClasses == n_classes
 

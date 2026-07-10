@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,6 +47,6 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
     && conda config --set solver libmamba
 
 # install cuML
-ARG RAPIDS_VERSION=25.12
-RUN conda install -y -c rapidsai -c conda-forge -c nvidia cuml=$RAPIDS_VERSION cuvs=$RAPIDS_VERSION python=3.10 pylibraft=$RAPIDS_VERSION raft-dask=$RAPIDS_VERSION cuda-version=12.2 numpy~=1.0 \
+ARG RAPIDS_VERSION=26.06
+RUN conda install -y -c rapidsai -c conda-forge -c nvidia cuml=$RAPIDS_VERSION cuvs=$RAPIDS_VERSION python=3.11 pylibraft=$RAPIDS_VERSION raft-dask=$RAPIDS_VERSION cuda-version=12.2 numpy~=1.0 \
     && conda clean --all -f -y

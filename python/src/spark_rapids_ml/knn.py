@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -79,7 +79,12 @@ class NearestNeighborsClass(_CumlClass):
         return {"k": "n_neighbors"}
 
     def _get_cuml_params_default(self) -> Dict[str, Any]:
-        return {"n_neighbors": 5, "verbose": False, "batch_size": 2000000}
+        return {
+            "n_neighbors": 5,
+            "verbose": False,
+            "batch_size": 2000000,
+            "radius": 1.0,
+        }
 
     def _pyspark_class(self) -> Optional[ABCMeta]:
         return None
@@ -853,6 +858,7 @@ class ApproximateNearestNeighborsClass(_CumlClass):
             "algorithm": "ivfflat",
             "metric": "euclidean",
             "algo_params": None,
+            "radius": 1.0,
         }
 
     def _pyspark_class(self) -> Optional[ABCMeta]:

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2024, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,11 +96,13 @@ else
     exit 1
 fi
 
+if [[ -z ${CLUSTER_ID} ]]; then
 # start benchmark cluster
-CLUSTER_ID=$(./start_cluster.sh ${cluster_type})
-if [[ $? != 0 ]]; then
-    echo "Failed to start cluster."
-    exit 1
+    CLUSTER_ID=$(./start_cluster.sh ${cluster_type})
+    if [[ $? != 0 ]]; then
+        echo "Failed to start cluster."
+        exit 1
+    fi
 fi
 
 ssh_command () {

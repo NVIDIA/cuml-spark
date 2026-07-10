@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@ cat <<EOF
 {
     "num_workers": $num_gpus,
     "cluster_name": "$cluster_name",
-    "spark_version": "${db_version}.x-gpu-ml-scala2.12",
+    "spark_version": "${db_version}.x-gpu-ml-scala${SCALA_VERSION}",
     "spark_conf": {
         "spark.task.resource.gpu.amount": "0.25",
         "spark.task.cpus": "1",
         "spark.databricks.delta.preview.enabled": "true",
         "spark.python.worker.reuse": "true",
-        "spark.executorEnv.PYTHONPATH": "/databricks/jars/rapids-4-spark_2.12-25.12.0.jar:/databricks/spark/python",
+        "spark.executorEnv.PYTHONPATH": "/databricks/jars/rapids-4-spark_${SCALA_VERSION}-${SPARK_RAPIDS_VERSION}.jar:/databricks/spark/python",
         "spark.sql.files.minPartitionNum": "2",
         "spark.sql.execution.arrow.maxRecordsPerBatch": "10000",
         "spark.executor.cores": "8",

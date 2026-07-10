@@ -396,7 +396,7 @@ def _func_test_make_sparse_regression(
 
             for i in range(len(chunk_boundary)):
                 start = 0 if i == 0 else chunk_boundary[i - 1]
-                dense_count = np.count_nonzero(X_np[:, start : chunk_boundary[i]])
+                dense_count = int(np.count_nonzero(X_np[:, start : chunk_boundary[i]]))
 
                 col_density = density_values[i]
                 chunk_size = col_per_chunk[i]

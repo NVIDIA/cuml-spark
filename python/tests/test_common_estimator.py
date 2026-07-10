@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -634,9 +634,6 @@ def test_stage_level_scheduling() -> None:
     assert not dummy._skip_stage_level_scheduling("3.5.0", standalone_conf)
     assert not dummy._skip_stage_level_scheduling("3.5.1", standalone_conf)
 
-    # spark version < 3.4.0
-    assert dummy._skip_stage_level_scheduling("3.3.0", standalone_conf)
-
     # spark.executor.cores is not set
     bad_conf = (
         SparkConf()
@@ -711,7 +708,6 @@ def test_stage_level_scheduling() -> None:
                 .set("spark.executor.resource.gpu.amount", "1")
                 .set("spark.task.resource.gpu.amount", gpu_amount)
             )
-            assert dummy._skip_stage_level_scheduling("3.3.0", conf)
             assert dummy._skip_stage_level_scheduling("3.4.0", conf)
             assert dummy._skip_stage_level_scheduling("3.4.1", conf)
             assert dummy._skip_stage_level_scheduling("3.5.0", conf)

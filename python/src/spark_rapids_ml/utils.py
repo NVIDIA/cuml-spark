@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -175,7 +175,7 @@ def _get_gpu_id(task_context: TaskContext) -> int:
 # invoke the corresponding deallocate methods.  They will get cleaned up only when
 # the process exits.  This avoids a segfault in the case of creating a new
 # SAM resource with a smaller headroom.
-_old_memory_resources = []
+_old_memory_resources: List[Any] = []
 
 # keep track of last headroom to check if new sam mr is needed.
 _last_sam_headroom_size = None
@@ -222,8 +222,8 @@ def _configure_memory_resource(
         ) == type(rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)):
             _old_memory_resources.append(rmm.mr.get_current_device_resource())
             _last_sam_headroom_size = sam_headroom
-            mr = rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
-            rmm.mr.set_current_device_resource(mr)
+            _mr = rmm.mr.SamHeadroomMemoryResource(headroom=sam_headroom)
+            rmm.mr.set_current_device_resource(_mr)
 
     if uvm_enabled:
         if not type(rmm.mr.get_current_device_resource()) == type(

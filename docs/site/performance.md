@@ -10,7 +10,7 @@ nav_order: 6
 ## Stage-level scheduling
 
 Starting from spark-rapids-ml `23.10.0`, stage-level scheduling is automatically enabled.
-Therefore, if you are using Spark **standalone** cluster version **`3.4.0`** or higher, we strongly recommend
+Therefore, if you are using Spark **standalone** cluster version **`3.4`** or higher, we strongly recommend
 configuring the `"spark.task.resource.gpu.amount"` as a fractional value. This will
 enable running multiple tasks in parallel during the ETL phase to help the performance. An example configuration
 would be `"spark.task.resource.gpu.amount=1/spark.executor.cores"`. For example,
@@ -30,7 +30,7 @@ a total of 12 tasks per executor will be executed concurrently during the ETL ph
 is then used internally to the library to automatically carry out the ML training phases using the required 1 gpu per task.
 
 However, if you are using a spark-rapids-ml version earlier than 23.10.0 or a Spark
-standalone cluster version below 3.4.0, you need to make sure there will be only 1 task running at any time per executor.
+standalone cluster version below 3.4, you need to make sure there will be only 1 task running at any time per executor.
 You can set `spark.task.cpus` equal to `spark.executor.cores`, or `"spark.task.resource.gpu.amount"=1`. For example,
 
 ``` bash

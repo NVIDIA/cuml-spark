@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022-2025, NVIDIA CORPORATION.
+# Copyright (c) 2022-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -411,8 +411,9 @@ class PCAModel(PCAClass, _CumlModelWithColumns, _PCACumlParams):
 
             """
             from cuml.decomposition.pca_mg import PCAMG as CumlPCAMG
+            from pylibraft.common import Handle
 
-            pca = CumlPCAMG(output_type="numpy", **cuml_alg_params)
+            pca = CumlPCAMG(handle=Handle(), output_type="numpy", **cuml_alg_params)
 
             pca.n_features_in_ = n_cols
 

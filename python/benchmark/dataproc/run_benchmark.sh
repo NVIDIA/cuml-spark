@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2025, NVIDIA CORPORATION.
+# Copyright (c) 2025-2026, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ gpu_args=$(cat <<EOF
 --num_gpus=2 \
 --spark_confs spark.executor.resource.gpu.amount=1 \
 --spark_confs spark.task.resource.gpu.amount=1 \
---spark_confs spark.rapids.memory.gpu.pooling.enabled=false
+--spark_confs spark.rapids.memory.gpu.pool=NONE
 EOF
 )
 
@@ -67,11 +67,13 @@ fi
 
 BENCHMARK_DATA_HOME=gs://spark-rapids-ml-benchmarking/datasets
 
-# start benchmark cluster
-./start_cluster.sh $cluster_type
-if [[ $? != 0 ]]; then
-    echo "Failed to start cluster."
-    exit 1
+if [[ -z ${CLUSTER_NAME} ]]; then
+    # start benchmark cluster
+    ./start_cluster.sh $cluster_type
+    if [[ $? != 0 ]]; then
+        echo "Failed to start cluster."
+        exit 1
+    fi
 fi
 
 cluster_name=${CLUSTER_NAME:-"${USER}-spark-rapids-ml-${cluster_type}"}
