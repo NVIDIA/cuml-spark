@@ -48,11 +48,6 @@ class CumlContext:
         2. do all gather for all the workers to get the nccl unique uid.
         3. if require_ucx is true, initialize ucx and inject ucx together with nccl into a handle
         """
-        # need this first to load shared ucx shared libraries from ucx-py instead of raft-dask
-        import ucxx
-        from pylibraft.common import Handle  # isort: split
-        from raft_dask.common import UCX
-        from raft_dask.common.nccl import nccl
 
         self.enable = enable
         self._handle: Optional["Handle"] = None
@@ -65,24 +60,18 @@ class CumlContext:
         self._nranks = nranks
         self._require_ucx = require_ucx
 
-        self._handle = Handle(n_streams=0)
         self._nccl_comm: Optional["nccl"] = None
         self._nccl_unique_id = None
         self._ucx: Optional["UCX"] = None
         self._ucx_port = None
         self._ucx_eps = None
 
-        nccl_uid = ""
-        if context.partitionId() == 0:
-            nccl_uid = base64.b64encode(nccl.get_unique_id()).decode("utf-8")
-
-        if self._require_ucx is False:
-            nccl_uids = context.allGather(nccl_uid)
-            self._nccl_unique_id = base64.b64decode(nccl_uids[0])
-        else:
+        if self._require_ucx is True:
             tasks = context.getTaskInfos()
             self._ips = [task.address.split(":")[0] for task in tasks]
 
+            # set environment variables for ucx before any imports of nccl or ucxx to avoid race condition w/ c libraries
+            # reading these variables, which would cause a segfault.
             # set environmental variables according to https://github.com/rapidsai/ucx-py
             # the code occasionally run fail without setting the variables
             # TODO: will have to figure how to make this more flexible to take advantage of higher speed interconnects on multi-gpu nodes
@@ -96,6 +85,22 @@ class CumlContext:
                 except ValueError:
                     pass
 
+        # need ucxx import first to load shared ucx shared libraries from ucx-py instead of raft-dask
+        import ucxx
+        from pylibraft.common import Handle  # isort: split
+        from raft_dask.common import UCX
+        from raft_dask.common.nccl import nccl
+
+        self._handle = Handle(n_streams=0)
+
+        nccl_uid = ""
+        if context.partitionId() == 0:
+            nccl_uid = base64.b64encode(nccl.get_unique_id()).decode("utf-8")
+
+        if self._require_ucx is False:
+            nccl_uids = context.allGather(nccl_uid)
+            self._nccl_unique_id = base64.b64decode(nccl_uids[0])
+        else:
             # ucxx seems to require creating listener in a couroutine, otherwise a timeout error is raised
             self._loop = asyncio.get_event_loop()
 
