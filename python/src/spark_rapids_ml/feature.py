@@ -196,6 +196,14 @@ class PCA(PCAClass, _CumlEstimator, _PCACumlParams):
     >>> gpu_model = gpu_pca.fit(df)
     """
 
+    def _validate_first_sample_dimension(self, dimension: int) -> None:
+        if self.isDefined(self.k):
+            k = self.getK()
+            if dimension < k:
+                raise ValueError(
+                    f"source vector size {dimension} must be no less than k={k}"
+                )
+
     @keyword_only
     def __init__(
         self,

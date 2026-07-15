@@ -359,6 +359,10 @@ class _CumlCommon(MLWritable, MLReadable):
     def __init__(self) -> None:
         super().__init__()
 
+    def _validate_first_sample_dimension(self, dimension: int) -> None:
+        """Validate the feature dimension inferred from the first sample."""
+        return None
+
     @staticmethod
     def _get_gpu_device(
         context: Optional[TaskContext], is_local: bool, is_transform: bool = False
@@ -558,6 +562,8 @@ class _CumlCaller(_CumlParams, _CumlCommon):
         else:
             # should never get here
             raise Exception("Unable to determine input column(s).")
+
+        self._validate_first_sample_dimension(dimension)
 
         return select_cols, input_cols, dimension, feature_type
 

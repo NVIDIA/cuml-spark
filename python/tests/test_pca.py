@@ -488,6 +488,26 @@ def test_parameters_validation() -> None:
             PCA().setK(-1).fit(df)
 
 
+@pytest.mark.parametrize("feature_type", ["array", "vector", "multi-column"])
+def test_first_sample_dimension_validation(feature_type: str) -> None:
+    with CleanSparkSession() as spark:
+        if feature_type == "array":
+            df = spark.createDataFrame([([1.0, 2.0],)], ["features"])
+            pca = PCA(k=3, inputCol="features")
+        elif feature_type == "vector":
+            df = spark.createDataFrame([(Vectors.dense(1.0, 2.0),)], ["features"])
+            pca = PCA(k=3, inputCol="features")
+        else:
+            df = spark.createDataFrame([(1.0, 2.0)], ["feature_1", "feature_2"])
+            pca = PCA(k=3, inputCols=["feature_1", "feature_2"])
+
+        with pytest.raises(
+            ValueError,
+            match="source vector size 2 must be no less than k=3",
+        ):
+            pca.fit(df)
+
+
 def test_handle_param_spark_confs() -> None:
     """
     Test _handle_param_spark_confs method that reads Spark configuration values
