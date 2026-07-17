@@ -1256,7 +1256,7 @@ class UMAP(UMAPClass, _CumlEstimatorSupervised, _UMAPCumlParams):
                     indices = csr_chunk.indices
                     indptr = csr_chunk.indptr
                     data = csr_chunk.data
-                    if cuda_managed_mem_enabled:
+                    if cuda_managed_mem_enabled or cuda_system_mem_enabled:
                         yield pd.DataFrame(
                             data=[
                                 {
@@ -1281,7 +1281,7 @@ class UMAP(UMAPClass, _CumlEstimatorSupervised, _UMAPCumlParams):
                             ]
                         )
                 else:
-                    if cuda_managed_mem_enabled:
+                    if cuda_managed_mem_enabled or cuda_system_mem_enabled:
                         yield pd.DataFrame(
                             {
                                 "embedding_": list(embedding[start:end].get()),
