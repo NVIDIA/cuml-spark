@@ -445,7 +445,7 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">... </span>    <span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="p">([</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">),</span>
 <span class="gp">... </span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="s2">&quot;features array&lt;float&gt;, label float&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="s2">"features array&lt;float&gt;, label float"</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+----------+-----+</span>
@@ -459,9 +459,9 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lr_estimator</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_estimator</span><span class="o">.</span><span class="n">setFeaturesCol</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_estimator</span><span class="o">.</span><span class="n">setFeaturesCol</span><span class="p">(</span><span class="s2">"features"</span><span class="p">)</span>
 <span class="go">LogisticRegression_a757215437b0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_estimator</span><span class="o">.</span><span class="n">setLabelCol</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_estimator</span><span class="o">.</span><span class="n">setLabelCol</span><span class="p">(</span><span class="s2">"label"</span><span class="p">)</span>
 <span class="go">LogisticRegression_a757215437b0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lr_model</span> <span class="o">=</span> <span class="n">lr_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lr_model</span><span class="o">.</span><span class="n">coefficients</span>
