@@ -16,4 +16,4 @@ numpy_allocator
 psutil
 pyspark>=3.4.1,<4.0
 scikit-learn>=1.2.1
-cryptography==46.0.6
+cryptography==46.0.7
