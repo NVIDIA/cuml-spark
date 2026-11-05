@@ -67,6 +67,7 @@ RUN pip install --no-cache-dir \
     pylibraft-cu12~=${RAPIDS_VERSION} \
     raft-dask-cu12~=${RAPIDS_VERSION} \
     numpy~=1.0 \
+    "pyarrow<26.0.0" \
     --extra-index-url=https://pypi.nvidia.com
 
 
