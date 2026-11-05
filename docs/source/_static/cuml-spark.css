@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2026, NVIDIA CORPORATION.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* Match the emerald link color in docs/site/_sass/color_schemes/emerald.scss. */
+html[data-theme="light"] {
+  --pst-color-primary: #008564;
+  --pst-color-primary-bg: #e6f3ef;
+  --pst-color-primary-highlight: #00684e;
+  --pst-color-link-hover: #00684e;
+  --pst-color-inline-code-links: #00684e;
+}
+
+/* Use a lighter emerald to maintain contrast on the theme's dark background. */
+html[data-theme="dark"] {
+  --pst-color-primary: #46d6b0;
+  --pst-color-primary-bg: #073d2e;
+  --pst-color-primary-highlight: #2db38f;
+  --pst-color-link-hover: #76e8c8;
+  --pst-color-inline-code-links: #46d6b0;
+}
+
+/* Keep heading links, focus rings, tables, and API signatures in one palette. */
+html[data-theme] {
+  --pst-color-secondary: var(--pst-color-primary);
+  --pst-color-secondary-bg: var(--pst-color-primary-bg);
+  --pst-color-secondary-highlight: var(--pst-color-primary-highlight);
+  --pst-color-accent: var(--pst-color-primary);
+  --pst-color-accent-bg: var(--pst-color-primary-bg);
+  --pst-color-table-row-hover-bg: var(--pst-color-primary-bg);
+  --pst-color-inline-code: var(--pst-color-inline-code-links);
+  --pst-color-target: var(--pst-color-primary-bg);
+}

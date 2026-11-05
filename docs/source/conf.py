@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'spark-rapids-ml'
+project = 'cuML Spark'
 copyright = '2025-2026, NVIDIA'
 author = 'NVIDIA'
 release = '26.06.0'
@@ -54,6 +54,13 @@ intersphinx_mapping = {
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'pydata_sphinx_theme'
+html_theme_options = {
+    'pygments_light_style': 'friendly',
+    'pygments_dark_style': 'native',
+}
+html_static_path = ['_static']
+html_css_files = ['vendor/rapids/custom.css', 'cuml-spark.css']
+html_js_files = [('vendor/rapids/custom.js', {'defer': 'defer'})]
 
 html_show_sourcelink = False
 
@@ -79,7 +86,44 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
     # return True if (skip or exclude) else None  # Can interfere with subsequent skip functions.
     return True if exclude or skip else None
 
+def _write_readable_comments(app, exception):
+    """Keep the friendly palette while increasing light-mode comment contrast."""
+    if exception is not None or app.builder.format != 'html':
+        return
+
+    from pathlib import Path
+
+    from pygments.styles import get_style_by_name
+    from pygments.token import Comment
+    from pydata_sphinx_theme.pygments import get_pygments_stylesheet
+
+    options = app.config.html_theme_options
+    light_style = get_style_by_name(options['pygments_light_style'])
+
+    token_styles = {}
+    for token, spec in light_style.styles.items():
+        # Sphinx can mutate the raw style definitions on import. Preserve
+        # the palette's resolved foreground colors for non-comment tokens.
+        foreground = (
+            '52636b' if token in Comment
+            else light_style.style_for_token(token)['color']
+        )
+        token_styles[token] = ' '.join(
+            '#' + foreground if part.startswith('#') else part
+            for part in spec.split()
+        )
+
+    class ReadableCommentsStyle(light_style):
+        styles = token_styles
+
+    # Run after PyData's CSS generator so the customized palette is included
+    # in the generated stylesheet, including in the published API guides.
+    css = get_pygments_stylesheet(
+        ReadableCommentsStyle, options['pygments_dark_style']
+    )
+    (Path(app.outdir) / '_static' / 'pygments.css').write_text(css, encoding='utf-8')
+
+
 def setup(app):
-    app.add_css_file("https://docs.rapids.ai/assets/css/custom.css")
-    app.add_js_file("https://docs.rapids.ai/assets/js/custom.js", loading_method="defer")
     app.connect('autodoc-skip-member', autodoc_skip_member)
+    app.connect('build-finished', _write_readable_comments, priority=800)

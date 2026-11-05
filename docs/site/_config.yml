@@ -14,19 +14,20 @@
 # limitations under the License.
 #
 
-title: Spark Rapids ML
+title: cuML Spark
 description: >- # this means to ignore newlines until "baseurl:"
-  Spark Rapids ML enables GPU accelerated distributed machine learning on Apache Spark
-  powered by the RAPIDS cuML library.
+  cuML Spark enables GPU accelerated distributed machine learning on Apache Spark
+  powered by the cuML library.
 baseurl: "/cuml-spark" # the subpath of your site, e.g. /blog
-url: "nvidia.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://nvidia.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 aux_links:
-  "Spark Rapids ML on GitHub":
+  "cuML Spark on GitHub":
     - "//github.com/nvidia/cuml-spark"
 
 # Build settings
 remote_theme: pmarsceill/just-the-docs
+color_scheme: emerald
 plugins:
   - jekyll-feed
 
