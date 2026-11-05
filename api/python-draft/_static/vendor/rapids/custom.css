@@ -1,0 +1,638 @@
+/* SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES.
+ * All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0 */
+
+/* Custom API layout CSS */
+.api-left-header {
+  max-height: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  width: 229px;
+  background-color: #f5f6fa;
+  border-bottom: 1px solid #dedede;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.5rem 2rem;
+}
+
+.api-site-title {
+  color: #27262b;
+}
+
+.api-right-header {
+  display: flex;
+  justify-content: flex-end;
+  height: 60px;
+  padding: 0;
+  border-bottom: 1px solid #dedede;
+  margin-left: 229px;
+}
+
+.api-main-content {
+  padding: 0;
+  margin: 0;
+  max-width: 100%;
+}
+
+#api-main-content {
+  height: 100%;
+}
+
+#api-main-content iframe {
+  position: fixed;
+  height: 100%;
+  border: none;
+  top: 0;
+  margin-top: 60px;
+}
+
+.api-page-header {
+  background-color: #f5f6fa;
+}
+@media (min-width: 46.25rem) {
+  .api-page-header {
+    background-color: #fff;
+  }
+}
+.api-page-header .main-content {
+  padding-top: 0;
+}
+@media (min-width: 46.25rem) {
+  .api-page-header .main-content {
+    display: flex;
+    justify-content: flex-end;
+    height: 60px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+.api-links {
+  display: block;
+  position: relative;
+  flex-grow: 0;
+  padding: 1rem;
+  margin-bottom: 0;
+  background-color: transparent;
+  box-shadow: none;
+  border-right: none;
+}
+
+.api-links-end {
+  flex-grow: 1;
+  border-right: none;
+  text-align: left;
+}
+
+.api-links select {
+  font-size: 14px;
+}
+
+.api-links li {
+  margin: 0 0.25rem 0 0;
+}
+
+.api-links-double {
+  padding: 0.25rem 0.5rem;
+}
+
+.api-links-label {
+  padding: 0.5rem;
+  text-align: center;
+  background: #f5f6fa;
+}
+
+.api-links-label.orange {
+  color: #ffb500;
+  background: #f5f6fa;
+  border-right: 1px solid #ffb500;
+}
+
+.api-links-label.blue {
+  color: #36c9dd;
+  background: #f5f6fa;
+  border-right: 1px solid #36c9dd;
+}
+
+.api-links-label.dark-purple {
+  color: #7400ff;
+  background: #f5f6fa;
+  border-right: 1px solid #7400ff;
+}
+
+dt {
+  font-size: 14px !important;
+  font-weight: 300 !important;
+}
+
+dd {
+  font-size: 14px !important;
+}
+
+/* Font Colors */
+.font-orange {
+  color: #ffb500;
+}
+
+.font-blue {
+  color: #36c9dd;
+}
+
+.font-dark-purple {
+  color: #7400ff;
+}
+
+/* Help section */
+.footer-help-section {
+  display: flex;
+  justify-content: left;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.footer-help-box {
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.footer-help-box-image {
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  max-height: 64px;
+}
+
+.footer-help-box p {
+  font-size: 14px;
+  display: block;
+  padding: 10px 0 0 0;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* JTD Overrides */
+.page-content {
+  max-width: 1000px !important;
+}
+
+/* JTD custom theme for RAPIDS */
+/* RAPIDS Color #7253ed */
+
+/* body */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "helvetica neue", helvetica,
+    roboto, noto, "segoe ui", arial, sans-serif;
+  font-size: inherit;
+  line-height: 1.4;
+  color: var(--pst-color-text-base);
+}
+
+h1,
+h2,
+.rst-content .toctree-wrapper p.caption,
+h3,
+h4,
+h5,
+h6,
+legend {
+  font-family: -apple-system, BlinkMacSystemFont, "helvetica neue", helvetica,
+    roboto, noto, "segoe ui", arial, sans-serif;
+}
+
+.contents a,
+.rst-content a {
+  color: #7253ed;
+  text-decoration: none;
+  background-image: linear-gradient(#eeebee 0%, #eeebee 100%);
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  background-size: 1px 1px;
+}
+
+.contents a:hover,
+.rst-content a:hover {
+  color: #7253ed;
+  background-image: linear-gradient(
+    rgba(114, 83, 237, 0.45) 0%,
+    rgba(114, 83, 237, 0.45) 100%
+  );
+  background-size: 1px 1px;
+}
+
+/* breakout blocks */
+
+.highlight {
+  background-color: #f6f3ff;
+}
+
+.highlight .k {
+  color: #920b60;
+}
+
+.highlight .nn {
+  color: #7253ed;
+}
+
+.highlight .kk {
+  color: #920b60;
+}
+
+.highlight .kn {
+  color: #920b60;
+}
+
+.highlight .nb {
+  color: #920b60;
+}
+
+.highlight .n {
+  color: #404A4A;
+}
+
+.highlight .o {
+  color: #667500;
+}
+
+.highlight .p {
+  color: #404A4A;
+}
+
+/* Selector CSS starts here */
+
+.rapids-home-container__home-btn {
+  position: relative;
+  display: block;
+  padding: 0.5em 0;
+}
+
+.rapids-home-container__home-btn::before {
+  font-family: "FontAwesome";
+  content: "\f015";
+  font-weight: 400;
+}
+
+#rapids-pydata-container .rapids-home-container__home-btn::before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+.rapids-selector__container,
+.rapids-home-container {
+  text-align: left;
+}
+
+.rapids-selector__container {
+  position: relative;
+}
+
+#rapids-doxygen-container {
+  padding: 1em;
+}
+
+@media (min-width: 768px) {
+  #rapids-doxygen-container .rapids-home-container,
+  #rapids-doxygen-container .rapids-selector__container {
+    display: inline-block;
+    margin: 0 0 0 40px;
+  }
+}
+
+.rapids-selector__container * {
+  box-sizing: border-box;
+}
+
+.rapids-home-container__home-btn,
+.rapids-home-container__home-btn:visited,
+.rapids-home-container__home-btn:hover,
+.rapids-selector__selected {
+  color: #7253ed;
+  font-weight: 700;
+  text-decoration: none;
+  background-image: linear-gradient(#eeebee 0%, #eeebee 100%);
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  background-size: 1px 1px;
+}
+
+.rapids-selector__selected:hover,
+.rapids-home-container__home-btn:hover {
+  background-image: linear-gradient(
+    rgba(114, 83, 237, 0.45) 0%,
+    rgba(114, 83, 237, 0.45) 100%
+  );
+  background-size: 1px 1px;
+}
+
+.rapids-selector__selected {
+  cursor: pointer;
+  padding: 0.5em 2em 0.5em 0;
+}
+
+.rapids-selector__selected::after {
+  content: "\f0d7";
+  font-family: "FontAwesome";
+  transition: all 250ms ease-in-out;
+  transform: rotate(180deg);
+}
+
+#rapids-pydata-container .rapids-selector__selected::after {
+  font-family: "Font Awesome 5 Free";
+}
+
+.rapids-selector--hidden .rapids-selector__selected::after {
+  transform: rotate(0);
+}
+
+#rapids-doxygen-container .rapids-selector__selected::after {
+  margin-left: 5px;
+}
+
+#rapids-pydata-container .rapids-selector__selected::after {
+  position: absolute;
+  right: 0.75em;
+}
+
+.rapids-selector__menu {
+  position: absolute;
+  z-index: 10000; /* keep above 9999 for doxygen compatibility */
+  background-color: #f5f6fa;
+  min-width: 100%;
+  left: 0;
+  box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2),
+    0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  transition: all 250ms ease-in-out;
+}
+
+.rapids-selector--hidden .rapids-selector__menu {
+  height: 0 !important;
+  visibility: hidden;
+}
+
+.rapids-selector__menu-item {
+  display: block;
+  padding: 0.5em;
+  white-space: nowrap;
+}
+
+a.rapids-selector__menu-item,
+a.rapids-selector__menu-item:visited {
+  color: #5c5962;
+}
+
+a.rapids-selector__menu-item:hover,
+a.rapids-selector__menu-item--selected,
+a.rapids-selector__menu-item--selected:visited {
+  text-decoration: none;
+  background-color: #7253ed;
+  color: white;
+}
+
+a.rapids-selector__menu-item--selected {
+  cursor: default;
+}
+
+/* PyData pages load Font Awesome through JS/SVG handling, so selector
+ * pseudo-elements should not depend on icon webfonts being available.
+ */
+#rapids-pydata-container .rapids-home-container__home-btn::before {
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.25em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.2 1.5 6.4l.9 1.1L3.5 6.6v6.9h3.4V9.8h2.2v3.7h3.4V6.6l1.1.9.9-1.1L8 1.2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.2 1.5 6.4l.9 1.1L3.5 6.6v6.9h3.4V9.8h2.2v3.7h3.4V6.6l1.1.9.9-1.1L8 1.2z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+#rapids-pydata-container .rapids-selector__selected::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  position: absolute;
+  top: 0.85em;
+  right: 0.75em;
+  transform: rotate(225deg);
+  transform-origin: 65% 65%;
+}
+
+#rapids-pydata-container .rapids-selector--hidden .rapids-selector__selected::after {
+  transform: rotate(45deg);
+}
+
+.label-title {
+  margin: 0;
+  font-size: inherit !important;
+  vertical-align: inherit !important;
+  font-weight: bold;
+}
+
+/* This rule adjusts the sidebar height for the PyData
+theme to account for the additional HTML elements that
+are added in post-processing.
+ */
+@media (min-width: 720px) {
+  @supports (position: -webkit-sticky) or (position: sticky) {
+    .bd-links {
+      max-height: calc(100vh - 18rem);
+    }
+  }
+}
+
+
+/* Mirrors the change in:
+ *   https://github.com/sphinx-doc/sphinx/pull/5976
+ * which is not showing up in our theme.
+ */
+.classifier:before {
+    font-style: normal;
+    margin: 0.5em;
+    content: ":";
+}
+
+
+table.io-supported-types-table {
+    text-align: center
+}
+
+table.io-supported-types-table thead{
+    text-align: center !important;
+}
+
+:root {
+  --pst-heading-color: var(--pst-color-primary);
+  --pst-color-active-navigation: 114, 83, 237;
+  --pst-color-navbar-link: 77, 77, 77;
+  --pst-color-navbar-link-hover: var(--pst-color-active-navigation);
+  --pst-color-navbar-link-active: var(--pst-color-active-navigation);
+  --pst-color-sidebar-link: 77, 77, 77;
+  --pst-color-sidebar-link-hover: var(--pst-color-active-navigation);
+  --pst-color-sidebar-link-active: var(--pst-color-active-navigation);
+  --pst-color-sidebar-expander-background-hover: 244, 244, 244;
+  --pst-color-sidebar-caption: 77, 77, 77;
+  --pst-color-toc-link: 119, 117, 122;
+  --pst-color-toc-link-hover: var(--pst-color-active-navigation);
+  --pst-color-toc-link-active: var(--pst-color-active-navigation);
+
+}
+
+/* Used to make special-table scrollable when it overflows */
+.special-table-wrapper {
+    width: 100%;
+    overflow: auto !important;
+}
+
+.special-table td, .special-table th {
+    border: 1px solid #dee2e6;
+}
+
+/* Needed to resolve https://github.com/executablebooks/jupyter-book/issues/1611 */
+.output.text_html {
+    overflow: auto;
+}
+
+/* pydata-sphinx-theme light and dark mode theme color settings */
+html[data-theme="light"] {
+    --pst-color-primary: rgb(114, 83, 237);
+    --pst-color-text-base: rgb(51, 51, 51);
+    --pst-color-secondary: rgb(227, 46, 0);
+    --pst-table-background-color: transparent;
+}
+
+
+html[data-theme="dark"] {
+    --pst-color-primary: rgb(114, 83, 237);
+    --pst-color-inline-code: rgb(248, 6, 204);
+    --pst-table-background-color: var(--pst-color-text-muted);
+}
+
+div.cell_output table{
+    background: var(--pst-table-background-color);
+}
+
+
+/*
+ * libcudf doxygen rules start
+ *
+ */
+
+/* sm-dox is the CSS class Doxygen uses for the main navigation menu bar */
+.sm-dox {
+  background-image:none;              /* override Doxygen background images */
+  background-color: #7306ff;        /* rapids.ai menu background purple */
+}
+
+/* Menu links */
+.sm-dox a,
+.sm-dox a:focus,
+.sm-dox a:hover,
+.sm-dox a:active,
+.sm-dox a.highlighted {
+  background-image:none;              /* override Doxygen background images */
+  color: white;                     /* rapids.ai menu white font */
+  font-family:"Open Sans",sans-serif; /* rapids.ai menu font family */
+  /* rapids.ai uppercase menus, no decoration or shadows, 1em size */
+  text-decoration: none;
+  text-transform: uppercase;
+  text-shadow: none;
+  font-weight: normal;
+  font-size: 1em;
+}
+
+.sm-dox a:hover {
+  background-image:none;                    /* override Doxygen background images */
+  color: #a785e7;                         /* rapids.ai menu text hover color */
+  -webkit-transition: all 0.3s ease-in-out; /* rapids.ai menu fade when hover */
+  -moz-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+/* These are the triangles to the right of menus that open up. Make them match the font/fade */
+.sm-dox a span.sub-arrow {
+  border-top-color: white;
+}
+
+.sm-dox a:hover span.sub-arrow {
+  border-top-color: #a785e7;              /* rapids.ai menu text hover color */
+  -webkit-transition: all 0.3s ease-in-out; /* rapids.ai menu fade when hover */
+  -moz-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+/* sm-dox ul is the drop-down menus that appear when you mouse over hierarchical menus.
+   Make these white but highlight hovered items with rapids purple background and white text. */
+.sm-dox ul a {
+  font-size: 1em;
+}
+
+.sm-dox ul a:hover {
+  background-image:none;
+  background-color: #7306ff;
+  font-size: 1em;
+  text-shadow: none;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Sub menu (underneath the main Doxygen bar) is a ul with class navpath that shows
+   the C++ class hierarchy.
+*/
+.navpath ul
+{
+  font-size: 13px;             /* Bigger than Doxygen default looks a bit better */
+  background-image:none;       /* Override Doxygen gradient background image */
+  background-color: #FAF6FF; /* A nearly white RAPIDS purple background */
+  border-top:none;             /* Override Doxygen top border for class hierarchy menu since
+                                  it doesn't match the menu above. */
+}
+
+/* Note we don't override the background on li tags here because we want to keep the ">"
+   background images Doxygen uses here as separators */
+.navpath li.navelem {
+  background-color: #FAF6FF;   /* A nearly white RAPIDS purple background */
+}
+
+/* Add some CSS to make class / function lists nicer in the presence of long templated names */
+
+.directory td.entry {
+  white-space: normal;                /* Allow text wrapping for long class names */
+  min-width:   512px;                 /* But don't wrap them too much. */
+
+  /* This indent and padding causes any long class names that are wrapped to be indented on
+     wrapped lines */
+  text-indent: -65px;
+  padding-left: 55px;
+}
+
+/* Prevent arrows from being negatively indented */
+.arrow {
+  text-indent: 0px;
+  padding-left: 10px;
+}
+
+/* Prevent icons from being negatively indented */
+.icona {
+  text-indent: 0px;
+  padding-left: 0px;
+}
+
+/*
+ * libcudf doxygen rules end
+ *
+ */
+
+.table_br {
+  display: block;
+  margin-bottom: 5px;
+}

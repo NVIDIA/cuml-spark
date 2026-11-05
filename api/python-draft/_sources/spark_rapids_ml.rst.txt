@@ -16,8 +16,8 @@
     under the License.
 
 
-Spark Rapids ML
-===============
+cuML Spark
+==========
 
 .. toctree::
    :maxdepth: 4

@@ -2,6 +2,6 @@
 title: Home
 nav_order: 1
 ---
-# Spark Rapids ML
+# cuML Spark
 
-Spark Rapids ML enables GPU accelerated distributed machine learning on [Apache Spark](https://spark.apache.org/).  It provides several PySpark ML compatible algorithms powered by the [RAPIDS cuML](https://docs.rapids.ai/api/cuml/stable/) library.
+cuML Spark enables GPU accelerated distributed machine learning on [Apache Spark](https://spark.apache.org/).  It provides several PySpark ML compatible algorithms powered by the [cuML](https://docs.rapids.ai/api/cuml/stable/) library.

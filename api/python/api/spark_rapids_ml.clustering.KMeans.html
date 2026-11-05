@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>KMeans &#8212; spark-rapids-ml 26.06.0 documentation</title>
+    <title>KMeans &#8212; cuML Spark 26.06.0 documentation</title>
   
   
   
@@ -30,7 +30,8 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="https://docs.rapids.ai/assets/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/vendor/rapids/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/cuml-spark.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
@@ -43,8 +44,8 @@
     <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
-    <script defer="defer" src="https://docs.rapids.ai/assets/js/custom.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/spark_rapids_ml.clustering.KMeans';</script>
+    <script defer="defer" src="../_static/vendor/rapids/custom.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="KMeansModel" href="spark_rapids_ml.clustering.KMeansModel.html" />
@@ -124,7 +125,7 @@
   
   
   
-    <p class="title logo__title">spark-rapids-ml 26.06.0 documentation</p>
+    <p class="title logo__title">cuML Spark 26.06.0 documentation</p>
   
 </a></div>
     
@@ -140,7 +141,7 @@
     
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../spark_rapids_ml.html">
-    Spark Rapids ML
+    cuML Spark
   </a>
 </li>
 
@@ -230,7 +231,7 @@ document.write(`
     
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../spark_rapids_ml.html">
-    Spark Rapids ML
+    cuML Spark
   </a>
 </li>
 
@@ -337,7 +338,7 @@ document.write(`
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="../spark_rapids_ml.html" class="nav-link">Spark Rapids ML</a></li>
+    <li class="breadcrumb-item"><a href="../spark_rapids_ml.html" class="nav-link">cuML Spark</a></li>
     
     <li class="breadcrumb-item active" aria-current="page">KMeans</li>
   </ul>
@@ -414,7 +415,7 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">... </span>        <span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],),</span>
 <span class="gp">... </span>        <span class="p">([</span><span class="mf">9.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">],),</span>
 <span class="gp">... </span>        <span class="p">([</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">],),]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">"features"</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+----------+</span>
 <span class="go">|  features|</span>
@@ -424,11 +425,11 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="go">|[9.0, 8.0]|</span>
 <span class="go">|[8.0, 9.0]|</span>
 <span class="go">+----------+</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">setFeaturesCol</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">setFeaturesCol</span><span class="p">(</span><span class="s2">"features"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">setMaxIter</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="go">KMeans_5606dff6b4fa</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span> <span class="o">=</span> <span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span><span class="o">.</span><span class="n">setPredictionCol</span><span class="p">(</span><span class="s2">&quot;prediction&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span><span class="o">.</span><span class="n">setPredictionCol</span><span class="p">(</span><span class="s2">"prediction"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span><span class="o">.</span><span class="n">clusterCenters</span><span class="p">()</span>
 <span class="go">[[0.5, 0.5], [8.5, 8.5]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">transformed</span> <span class="o">=</span> <span class="n">gpu_model</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
@@ -441,8 +442,8 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="go">|[9.0, 8.0]|         1|</span>
 <span class="go">|[8.0, 9.0]|         1|</span>
 <span class="go">+----------+----------+</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/kmeans&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/kmeans_model&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"/tmp/kmeans"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"/tmp/kmeans_model"</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># vector column input</span>
@@ -452,10 +453,10 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">... </span>        <span class="p">(</span><span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="mf">9.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">]),),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">]),),]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">setFeaturesCol</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">"features"</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">setFeaturesCol</span><span class="p">(</span><span class="s2">"features"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">getFeaturesCol</span><span class="p">()</span>
-<span class="go">&#39;features&#39;</span>
+<span class="go">'features'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span> <span class="o">=</span> <span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -464,10 +465,10 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">... </span>        <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="mf">9.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;f1&quot;</span><span class="p">,</span> <span class="s2">&quot;f2&quot;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">setFeaturesCols</span><span class="p">([</span><span class="s2">&quot;f1&quot;</span><span class="p">,</span> <span class="s2">&quot;f2&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">"f1"</span><span class="p">,</span> <span class="s2">"f2"</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">setFeaturesCols</span><span class="p">([</span><span class="s2">"f1"</span><span class="p">,</span> <span class="s2">"f2"</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">getFeaturesCols</span><span class="p">()</span>
-<span class="go">[&#39;f1&#39;, &#39;f2&#39;]</span>
+<span class="go">['f1', 'f2']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_kmeans</span> <span class="o">=</span> <span class="n">gpu_kmeans</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>

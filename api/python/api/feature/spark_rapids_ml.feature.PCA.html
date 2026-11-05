@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>PCA &#8212; spark-rapids-ml 26.06.0 documentation</title>
+    <title>PCA &#8212; cuML Spark 26.06.0 documentation</title>
   
   
   
@@ -30,7 +30,8 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="https://docs.rapids.ai/assets/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/vendor/rapids/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/cuml-spark.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
@@ -43,12 +44,12 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
-    <script defer="defer" src="https://docs.rapids.ai/assets/js/custom.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/feature/spark_rapids_ml.feature.PCA';</script>
+    <script defer="defer" src="../../_static/vendor/rapids/custom.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="PCAModel" href="spark_rapids_ml.feature.PCAModel.html" />
-    <link rel="prev" title="Spark Rapids ML" href="../../spark_rapids_ml.html" />
+    <link rel="prev" title="cuML Spark" href="../../spark_rapids_ml.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -124,7 +125,7 @@
   
   
   
-    <p class="title logo__title">spark-rapids-ml 26.06.0 documentation</p>
+    <p class="title logo__title">cuML Spark 26.06.0 documentation</p>
   
 </a></div>
     
@@ -140,7 +141,7 @@
     
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../../spark_rapids_ml.html">
-    Spark Rapids ML
+    cuML Spark
   </a>
 </li>
 
@@ -230,7 +231,7 @@ document.write(`
     
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../../spark_rapids_ml.html">
-    Spark Rapids ML
+    cuML Spark
   </a>
 </li>
 
@@ -337,7 +338,7 @@ document.write(`
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="../../spark_rapids_ml.html" class="nav-link">Spark Rapids ML</a></li>
+    <li class="breadcrumb-item"><a href="../../spark_rapids_ml.html" class="nav-link">cuML Spark</a></li>
     
     <li class="breadcrumb-item active" aria-current="page">PCA</li>
   </ul>
@@ -404,9 +405,9 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],),</span>
 <span class="gp">... </span>        <span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],),</span>
 <span class="gp">... </span>        <span class="p">([</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],),]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="s2">&quot;features&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span><span class="o">.</span><span class="n">setOutputCol</span><span class="p">(</span><span class="s2">&quot;pca_features&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">"features"</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inputCol</span><span class="o">=</span><span class="s2">"features"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span><span class="o">.</span><span class="n">setOutputCol</span><span class="p">(</span><span class="s2">"pca_features"</span><span class="p">)</span>
 <span class="go">PCA...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span> <span class="o">=</span> <span class="n">gpu_pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span><span class="o">.</span><span class="n">getK</span><span class="p">()</span>
@@ -418,7 +419,7 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="go">             [0.70710678]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">gpu_model</span><span class="o">.</span><span class="n">explained_variance</span><span class="p">)</span>
 <span class="go">[1.0]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/pca&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"/tmp/pca"</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># vector column input</span>
@@ -426,10 +427,10 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]),),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="n">Vectors</span><span class="o">.</span><span class="n">dense</span><span class="p">([</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]),),]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">setInputCol</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">"features"</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">setInputCol</span><span class="p">(</span><span class="s2">"features"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span><span class="o">.</span><span class="n">getInputCol</span><span class="p">()</span>
-<span class="go">&#39;features&#39;</span>
+<span class="go">'features'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span> <span class="o">=</span> <span class="n">gpu_pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -437,10 +438,10 @@ cuML workers (i.e. GPUs in cluster) from the Spark environment.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span>
 <span class="gp">... </span>        <span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;f1&quot;</span><span class="p">,</span> <span class="s2">&quot;f2&quot;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">setInputCols</span><span class="p">([</span><span class="s2">&quot;f1&quot;</span><span class="p">,</span> <span class="s2">&quot;f2&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="s2">"f1"</span><span class="p">,</span> <span class="s2">"f2"</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">setInputCols</span><span class="p">([</span><span class="s2">"f1"</span><span class="p">,</span> <span class="s2">"f2"</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_pca</span><span class="o">.</span><span class="n">getInputCols</span><span class="p">()</span>
-<span class="go">[&#39;f1&#39;, &#39;f2&#39;]</span>
+<span class="go">['f1', 'f2']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gpu_model</span> <span class="o">=</span> <span class="n">gpu_pca</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -870,7 +871,7 @@ uses <code class="xref py py-func docutils literal notranslate"><span class="pre
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Spark Rapids ML</p>
+        <p class="prev-next-title">cuML Spark</p>
       </div>
     </a>
     <a class="right-next"
